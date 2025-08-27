@@ -21,7 +21,7 @@ RUN npm run build
 RUN npm prune --production
 
 # Expose port
-EXPOSE 5000
+EXPOSE 8000
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \

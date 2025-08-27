@@ -10,32 +10,34 @@ const seedRoles = async () => {
   try {
     await connectDatabase();
 
-    // Check if roles already exist
     const existingRolesCount = await RoleModel.countDocuments();
     if (existingRolesCount > 0) {
       console.log("Roles already exist, skipping seeding.");
-      return;
+    } else {
+      for (const roleName in RolePermissions) {
+        const role = roleName as keyof typeof RolePermissions;
+        const permissions = RolePermissions[role];
+
+        const newRole = new RoleModel({
+          name: role,
+          permissions: permissions,
+        });
+        await newRole.save();
+        console.log(`Role ${role} added with permissions.`);
+      }
+      console.log("Seeding completed successfully.");
     }
-
-    // Remove transaction session for standalone MongoDB
-    for (const roleName in RolePermissions) {
-      const role = roleName as keyof typeof RolePermissions;
-      const permissions = RolePermissions[role];
-
-      const newRole = new RoleModel({
-        name: role,
-        permissions: permissions,
-      });
-      await newRole.save();
-      console.log(`Role ${role} added with permissions.`);
-    }
-
-    console.log("Seeding completed successfully.");
   } catch (error) {
     console.error("Error during seeding:", error);
+  } finally {
+    // Disconnect from MongoDB and exit process
+    await mongoose.disconnect();
+    console.log("Database disconnected, exiting seeder.");
+    process.exit(0);
   }
 };
 
-seedRoles().catch((error) =>
-  console.error("Error running seed script:", error)
-);
+seedRoles().catch((error) => {
+  console.error("Error running seed script:", error);
+  process.exit(1);
+});
