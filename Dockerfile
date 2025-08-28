@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY yarn.lock ./
 
-# Install all dependencies (including devDependencies)
+# Install all dependencies (dev + prod) for building
 RUN npm install
 
 # Copy source code
@@ -17,7 +17,7 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Install only production dependencies for runtime
+# Remove dev dependencies to keep image light
 RUN npm prune --production
 
 # Expose port
@@ -30,5 +30,5 @@ RUN addgroup -g 1001 -S nodejs && \
 
 USER nodejs
 
-# Start the application
-CMD ["npm", "start"]
+# **Change start command to only run main app**
+CMD ["node", "dist/index.js"]
