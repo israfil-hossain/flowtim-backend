@@ -1,20 +1,24 @@
-# Stage 1: Build
-FROM node:18 AS build
+FROM docker.io/library/node:18
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
+
+# Copy package files
+COPY package.json yarn.lock ./
+
+# Install ALL dependencies (including dev dependencies for building)
+RUN yarn install
+
+# Copy source code
 COPY . .
-RUN npm run build
 
-# Stage 2: Production
-FROM node:18-alpine
+# Build TypeScript
+RUN yarn build
 
-WORKDIR /app
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/package*.json ./
+# Now remove dev dependencies to keep image smaller (optional)
+RUN yarn install --production --ignore-scripts --prefer-offline
 
-RUN npm install --production
-
+# Expose backend port
 EXPOSE 8000
-CMD ["node", "dist/main.js"]
+
+# Start the application
+CMD ["node", "dist/index.js"]
