@@ -1,23 +1,20 @@
-# Use Node.js 18 base image
-FROM node:18
+# Stage 1: Build
+FROM node:18 AS build
 
-# Set working directory
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
-RUN npm install --production
-
-# Copy source code
+RUN npm install
 COPY . .
-
-# Build TypeScript
 RUN npm run build
 
-# Expose backend port
-EXPOSE 8000
+# Stage 2: Production
+FROM node:18-alpine
 
-# Start backend
+WORKDIR /app
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package*.json ./
+
+RUN npm install --production
+
+EXPOSE 8000
 CMD ["node", "dist/main.js"]
