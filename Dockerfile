@@ -1,24 +1,50 @@
-FROM docker.io/library/node:18
+FROM node:18-bullseye-slim AS base
+
+ENV NODE_ENV=production
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy package files
+FROM base AS deps
+
+# Tools required to build native deps (e.g., bcrypt) in build stage
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
-# Install ALL dependencies (including dev dependencies for building)
-RUN yarn install
+FROM deps AS builder
 
-# Copy source code
-COPY . .
+COPY tsconfig.json ./
+COPY src ./src
+COPY mongo-init.js ./mongo-init.js
 
-# Build TypeScript
 RUN yarn build
 
-# Now remove dev dependencies to keep image smaller (optional)
-RUN yarn install --production --ignore-scripts --prefer-offline
+FROM base AS prod-deps
 
-# Expose backend port
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile --production --ignore-scripts
+
+FROM base AS runtime
+
+# Create and use a non-root user
+RUN useradd -ms /bin/bash nodeuser
+USER nodeuser
+
+WORKDIR /app
+
+ENV PORT=8000
+
+COPY --chown=nodeuser:nodeuser package.json ./
+COPY --chown=nodeuser:nodeuser --from=prod-deps /app/node_modules ./node_modules
+COPY --chown=nodeuser:nodeuser --from=builder /app/dist ./dist
+
 EXPOSE 8000
 
-# Start the application
 CMD ["node", "dist/index.js"]

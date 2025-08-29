@@ -4,10 +4,41 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
-      - MONGO_URI=""
+      - PORT=${PORT:-8000}
+      - BASE_PATH=${BASE_PATH:-/api}
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').connect(process.env.PORT||8000,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_DB_NAME:-flowtim_db}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-flowtim}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-flowtim}
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  mongo_data:
+      
+ 
