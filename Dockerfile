@@ -29,8 +29,12 @@ RUN yarn build
 
 FROM base AS prod-deps
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --production --ignore-scripts
+RUN yarn install --frozen-lockfile --production
 
 FROM base AS runtime
 
