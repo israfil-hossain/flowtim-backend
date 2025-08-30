@@ -46,7 +46,7 @@ app.use(
     secure: config.NODE_ENV === "production",
     httpOnly: true,
     sameSite: config.NODE_ENV === "production" ? "none" : "lax",
-    domain: config.NODE_ENV === "production" ? ".flowtim.com" : undefined,
+    domain: config.NODE_ENV === "production" ? "flowtim.com" : undefined,
   })
 );
 
@@ -83,12 +83,22 @@ app.use(
 app.get(
   `/`,
   asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    throw new BadRequestException(
-      "This is a bad request",
-      ErrorCodeEnum.AUTH_INVALID_TOKEN
-    );
     return res.status(HTTPSTATUS.OK).json({
-      message: "Hello Subscribe to the channel & share",
+      message: "FlowTim API is running",
+      session: req.session,
+      user: req.user,
+    });
+  })
+);
+
+app.get(
+  `/api/test-session`,
+  asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Session test",
+      session: req.session,
+      user: req.user,
+      cookies: req.headers.cookie,
     });
   })
 );
