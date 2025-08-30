@@ -19,6 +19,8 @@ import workspaceRoutes from "./routes/workspace.route";
 import memberRoutes from "./routes/member.route";
 import projectRoutes from "./routes/project.route";
 import taskRoutes from "./routes/task.route";
+import RoleModel from "./models/roles-permission.model";
+import { RolePermissions } from "./utils/role-permission";
 
 const app = express();
 const BASE_PATH = config.BASE_PATH;
@@ -100,10 +102,38 @@ app.use(`${BASE_PATH}/task`, isAuthenticated, taskRoutes);
 
 app.use(errorHandler);
 
+const seedRoles = async () => {
+  try {
+    const existingRolesCount = await RoleModel.countDocuments();
+    if (existingRolesCount === 0) {
+      console.log("Seeding roles...");
+      for (const roleName in RolePermissions) {
+        const role = roleName as keyof typeof RolePermissions;
+        const permissions = RolePermissions[role];
+
+        const newRole = new RoleModel({
+          name: role,
+          permissions: permissions,
+        });
+        await newRole.save();
+        console.log(`Role ${role} added with permissions.`);
+      }
+      console.log("Roles seeding completed successfully.");
+    } else {
+      console.log("Roles already exist, skipping seeding.");
+    }
+  } catch (error) {
+    console.error("Error during role seeding:", error);
+  }
+};
+
 const startServer = async () => {
   try {
     // Connect to database first
     await connectDatabase();
+    
+    // Seed roles if they don't exist
+    await seedRoles();
     
     // Start the server
     app.listen(config.PORT, () => {
