@@ -3,11 +3,17 @@ import { config } from "./app.config";
 
 const connectDatabase = async () => {
   try {
-    await mongoose.connect(config.MONGO_URI);
-    console.log("Connected to Mongo database");
+    console.log("Attempting to connect to MongoDB:", config.MONGO_URI);
+    await mongoose.connect(config.MONGO_URI, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    console.log("Connected to Mongo database successfully");
   } catch (error) {
-    console.log("Error connecting to Mongo database");
-    process.exit(1);
+    console.log("Error connecting to Mongo database:", error);
+    // Don't exit process, let it retry
+    setTimeout(connectDatabase, 5000);
   }
 };
 
