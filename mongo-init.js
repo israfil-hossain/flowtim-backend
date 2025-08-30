@@ -2,16 +2,16 @@
 // This script creates a user for the application database
 
 // Switch to the application database
-db = db.getSiblingDB(process.env.MONGO_DB_NAME || 'flowtim');
+db = db.getSiblingDB(process.env.MONGO_INITDB_DATABASE || 'flowtim_db');
 
 // Create application user with read/write permissions
 db.createUser({
-  user: process.env.MONGO_USERNAME || 'flowtim_user',
-  pwd: process.env.MONGO_PASSWORD || 'your_secure_password_here',
+  user: process.env.MONGO_INITDB_ROOT_USERNAME || 'flowtim',
+  pwd: process.env.MONGO_INITDB_ROOT_PASSWORD || 'flowtim',
   roles: [
     {
       role: 'readWrite',
-      db: process.env.MONGO_DB_NAME || 'flowtim'
+      db: process.env.MONGO_INITDB_DATABASE || 'flowtim_db'
     }
   ]
 });
