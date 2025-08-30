@@ -8,33 +8,24 @@ import {
   updateProjectController,
 } from "../controllers/project.controller";
 
-const projectRoutes = Router();
+const router = Router();
 
-projectRoutes.post("/workspace/:workspaceId/create", createProjectController);
+router.post("/workspace/:workspaceId/create", createProjectController);
 
-projectRoutes.put(
-  "/:id/workspace/:workspaceId/update",
-  updateProjectController
-);
+router.put("/:id/workspace/:workspaceId/update", updateProjectController);
 
-projectRoutes.delete(
-  "/:id/workspace/:workspaceId/delete",
-  deleteProjectController
-);
+router.delete("/:id/workspace/:workspaceId/delete", deleteProjectController);
 
-projectRoutes.get(
-  "/workspace/:workspaceId/all",
-  getAllProjectsInWorkspaceController
-);
+router.get("/workspace/:workspaceId/all", getAllProjectsInWorkspaceController);
 
-projectRoutes.get(
+router.get(
   "/:id/workspace/:workspaceId/analytics",
   getProjectAnalyticsController
 );
 
-projectRoutes.get(
+router.get(
   "/:id/workspace/:workspaceId",
   getProjectByIdAndWorkspaceIdController
 );
 
-export default projectRoutes;
+export default router;

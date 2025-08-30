@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { getCurrentUserController } from "../controllers/user.controller";
 
-const userRoutes = Router();
+const router = Router();
 
-userRoutes.get("/current", getCurrentUserController);
+router.get("/current", getCurrentUserController);
 
-export default userRoutes;
+export default router;

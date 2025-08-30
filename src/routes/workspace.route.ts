@@ -10,23 +10,20 @@ import {
   updateWorkspaceByIdController,
 } from "../controllers/workspace.controller";
 
-const workspaceRoutes = Router();
+const router = Router();
 
-workspaceRoutes.post("/create/new", createWorkspaceController);
-workspaceRoutes.put("/update/:id", updateWorkspaceByIdController);
+router.post("/create/new", createWorkspaceController);
+router.put("/update/:id", updateWorkspaceByIdController);
 
-workspaceRoutes.put(
-  "/change/member/role/:id",
-  changeWorkspaceMemberRoleController
-);
+router.put("/change/member/role/:id", changeWorkspaceMemberRoleController);
 
-workspaceRoutes.delete("/delete/:id", deleteWorkspaceByIdController);
+router.delete("/delete/:id", deleteWorkspaceByIdController);
 
-workspaceRoutes.get("/all", getAllWorkspacesUserIsMemberController);
+router.get("/all", getAllWorkspacesUserIsMemberController);
 
-workspaceRoutes.get("/members/:id", getWorkspaceMembersController);
-workspaceRoutes.get("/analytics/:id", getWorkspaceAnalyticsController);
+router.get("/members/:id", getWorkspaceMembersController);
+router.get("/analytics/:id", getWorkspaceAnalyticsController);
 
-workspaceRoutes.get("/:id", getWorkspaceByIdController);
+router.get("/:id", getWorkspaceByIdController);
 
-export default workspaceRoutes;
+export default router;
