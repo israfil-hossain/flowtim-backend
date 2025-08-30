@@ -12,6 +12,10 @@ db.createUser({
     {
       role: 'readWrite',
       db: process.env.MONGO_INITDB_DATABASE || 'flowtim_db'
+    },
+    {
+      role: 'readWrite',
+      db: 'admin'
     }
   ]
 });

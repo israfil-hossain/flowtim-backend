@@ -10,7 +10,7 @@ services:
       - NODE_ENV=production
       - PORT=${PORT:-8000}
       - BASE_PATH=${BASE_PATH:-/api}
-      - MONGO_URI=mongodb://flowtim:flowtim@mongo:27017/flowtim_db?authSource=flowtim_db
+      - MONGO_URI=mongodb://mongo:27017/flowtim_db
     ports:
       - "${PORT:-8000}:${PORT:-8000}"
     healthcheck:
@@ -27,11 +27,8 @@ services:
     restart: unless-stopped
     volumes:
       - mongo_data:/data/db
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     environment:
       - MONGO_INITDB_DATABASE=${MONGO_DB_NAME:-flowtim_db}
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-flowtim}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-flowtim}
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
