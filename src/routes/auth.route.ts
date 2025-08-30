@@ -8,7 +8,7 @@ import {
   registerUserController,
 } from "../controllers/auth.controller";
 
-const failedUrl = `${config.FRONTEND_GOOGLE_CALLBACK_URL}?status=failure`;
+const failedUrl = `${config.FRONTEND_ORIGIN}/auth/google/callback/failure`;
 
 const authRoutes = Router();
 

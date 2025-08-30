@@ -8,14 +8,27 @@ import passport from "passport";
 
 export const googleLoginCallback = asyncHandler(
   async (req: Request, res: Response) => {
-    const currentWorkspace = req.user?.currentWorkspace;
-
-    if (!currentWorkspace) {
+    console.log("Google callback - User:", req.user);
+    console.log("Google callback - Session:", req.session);
+    
+    if (!req.user) {
+      console.log("No user found in request");
       return res.redirect(
-        `${config.FRONTEND_GOOGLE_CALLBACK_URL}?status=failure`
+        `${config.FRONTEND_ORIGIN}/auth/google/callback/failure`
       );
     }
 
+    const currentWorkspace = req.user?.currentWorkspace;
+    console.log("Current workspace:", currentWorkspace);
+
+    if (!currentWorkspace) {
+      console.log("No current workspace found, redirecting to dashboard");
+      return res.redirect(
+        `${config.FRONTEND_ORIGIN}/dashboard`
+      );
+    }
+
+    console.log("Redirecting to workspace:", currentWorkspace);
     return res.redirect(
       `${config.FRONTEND_ORIGIN}/workspace/${currentWorkspace}`
     );
