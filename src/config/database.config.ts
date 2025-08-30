@@ -8,7 +8,6 @@ const connectDatabase = async () => {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
-      bufferCommands: false,
     });
     console.log("Connected to Mongo database successfully");
     

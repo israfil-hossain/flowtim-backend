@@ -100,9 +100,21 @@ app.use(`${BASE_PATH}/task`, isAuthenticated, taskRoutes);
 
 app.use(errorHandler);
 
-app.listen(config.PORT, async () => {
-  console.log(`Server listening on port ${config.PORT} in ${config.NODE_ENV}`);
-  await connectDatabase();
-});
+const startServer = async () => {
+  try {
+    // Connect to database first
+    await connectDatabase();
+    
+    // Start the server
+    app.listen(config.PORT, () => {
+      console.log(`Server listening on port ${config.PORT} in ${config.NODE_ENV}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 
