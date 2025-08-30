@@ -22,9 +22,9 @@ export const googleLoginCallback = asyncHandler(
     console.log("Current workspace:", currentWorkspace);
 
     if (!currentWorkspace) {
-      console.log("No current workspace found, redirecting to dashboard");
+      console.log("No current workspace found, redirecting to workspace");
       return res.redirect(
-        `${config.FRONTEND_ORIGIN}/dashboard`
+        `${config.FRONTEND_ORIGIN}/workspace`
       );
     }
 
