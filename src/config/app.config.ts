@@ -1,59 +1,60 @@
-import "dotenv/config";
-import { getEnv } from "../utils/get-env";
+import dotenv from "dotenv";
 import { CorsOptions } from "cors";
 import { CookieOptions } from "express";
+import { SessionOptions } from "express-session";
 
-const appConfig = () => ({
-  NODE_ENV: getEnv("NODE_ENV", "development"),
-  PORT: getEnv("PORT", "8000"),
+dotenv.config();
 
-  BASE_URL: getEnv("BASE_URL", "http://localhost:8000"),
-  FRONTEND_URL: getEnv("FRONTEND_URL", "http://localhost:3000"),
+export const config = {
+  NODE_ENV: process.env.NODE_ENV ?? "development",
+  PORT: process.env.PORT ?? "8000",
 
-  BASE_PATH: getEnv("BASE_PATH", "/api"),
-  MONGO_URI: getEnv("MONGO_URI", ""),
+  BASE_URL: process.env.BASE_URL ?? "http://localhost:8000",
+  FRONTEND_URL: process.env.FRONTEND_URL ?? "http://localhost:5173",
 
-  GOOGLE_CLIENT_ID: getEnv("GOOGLE_CLIENT_ID"),
-  GOOGLE_CLIENT_SECRET: getEnv("GOOGLE_CLIENT_SECRET"),
-  GOOGLE_CALLBACK_URL: getEnv("GOOGLE_CALLBACK_URL"),
+  MONGO_URI: process.env.MONGO_URI ?? "",
 
-  SESSION_SECRET: getEnv("SESSION_SECRET"),
-  SESSION_EXPIRES_IN: getEnv("SESSION_EXPIRES_IN"),
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? "",
 
-  COOKIE_DOMAIN: getEnv("COOKIE_DOMAIN"),
+  SESSION_SECRET: process.env.SESSION_SECRET ?? "",
+  SESSION_EXPIRES_IN: process.env.SESSION_EXPIRES_IN ?? "",
 
-  ALLOWED_ORIGINS: getEnv("ALLOWED_ORIGINS")
-    .split(",")
-    .map((item) => item.trim()),
-});
+  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
 
-export const config = appConfig();
+  ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS?.split(",").map((item) =>
+    item.trim()
+  ),
+};
 
-export const isProd = process.env.NODE_ENV === "production";
-export const isDev = process.env.NODE_ENV === "development";
+export const isProd = config.NODE_ENV === "production";
+export const isDev = config.NODE_ENV === "development";
 
 export const getCookieConfig = (
   options?: Partial<CookieOptions>
 ): CookieOptions => {
   return {
     httpOnly: true,
-    secure: true,
+    secure: isProd,
     path: "/",
-    sameSite: true,
+    sameSite: isProd ? "none" : "lax",
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    domain: config.COOKIE_DOMAIN ?? config.COOKIE_DOMAIN,
+    domain: isProd ? config.COOKIE_DOMAIN : undefined,
     ...options,
   };
 };
 
-export const getSessionConfig = () => {
+export const getSessionConfig = (
+  options: Partial<SessionOptions>
+): SessionOptions => {
   return {
     name: "flowtim",
     secret: "flowtim-secret",
     resave: false,
     saveUninitialized: false,
     cookie: getCookieConfig(),
+    ...options,
   };
 };
 

@@ -1,12 +1,12 @@
 import passport from "passport";
 import { config } from "../config/app.config";
 import { HTTPSTATUS } from "../config/http.config";
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response, RequestHandler } from "express";
 import { registerSchema } from "../validation/auth.validation";
 import { registerUserService } from "../services/auth.service";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 
-export const googleLoginCallback = asyncHandler(
+export const googleLoginCallback: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("Google callback - User:", req.user);
     console.log("Google callback - Session:", req.session);
@@ -31,7 +31,7 @@ export const googleLoginCallback = asyncHandler(
   }
 );
 
-export const registerUserController = asyncHandler(
+export const registerUserController: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
     const body = registerSchema.parse({
       ...req.body,
@@ -45,7 +45,7 @@ export const registerUserController = asyncHandler(
   }
 );
 
-export const loginController = asyncHandler(
+export const loginController: RequestHandler = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate(
       "local",
@@ -79,7 +79,7 @@ export const loginController = asyncHandler(
   }
 );
 
-export const logOutController = asyncHandler(
+export const logOutController: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
     req.logout((err) => {
       if (err) {
