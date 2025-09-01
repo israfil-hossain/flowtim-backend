@@ -8,23 +8,23 @@ import {
   registerUserController,
 } from "../controllers/auth.controller";
 
-const failedUrl = `${config.FRONTEND_ORIGIN}/auth/google/callback/failure`;
+const failedUrl = `${config.FRONTEND_URL}/auth/google/callback/failure`;
 
-const authRoutes = Router();
+const router = Router();
 
-authRoutes.post("/register", registerUserController);
-authRoutes.post("/login", loginController);
+router.post("/register", registerUserController);
+router.post("/login", loginController);
 
-authRoutes.post("/logout", logOutController);
+router.post("/logout", logOutController);
 
-authRoutes.get(
+router.get(
   "/google",
   passport.authenticate("google", {
     scope: ["profile", "email"],
   })
 );
 
-authRoutes.get(
+router.get(
   "/google/callback",
   passport.authenticate("google", {
     failureRedirect: failedUrl,
@@ -32,4 +32,4 @@ authRoutes.get(
   googleLoginCallback
 );
 
-export default authRoutes;
+export default router;

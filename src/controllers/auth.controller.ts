@@ -1,20 +1,20 @@
-import { NextFunction, Request, Response } from "express";
-import { asyncHandler } from "../middlewares/asyncHandler.middleware";
-import { config } from "../config/app.config";
-import { registerSchema } from "../validation/auth.validation";
-import { HTTPSTATUS } from "../config/http.config";
-import { registerUserService } from "../services/auth.service";
 import passport from "passport";
+import { config } from "../config/app.config";
+import { HTTPSTATUS } from "../config/http.config";
+import { NextFunction, Request, Response, RequestHandler } from "express";
+import { registerSchema } from "../validation/auth.validation";
+import { registerUserService } from "../services/auth.service";
+import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 
-export const googleLoginCallback = asyncHandler(
+export const googleLoginCallback: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("Google callback - User:", req.user);
     console.log("Google callback - Session:", req.session);
-    
+
     if (!req.user) {
       console.log("No user found in request");
       return res.redirect(
-        `${config.FRONTEND_ORIGIN}/auth/google/callback/failure`
+        `${config.FRONTEND_URL}/auth/google/callback/failure`
       );
     }
 
@@ -22,20 +22,16 @@ export const googleLoginCallback = asyncHandler(
     console.log("Current workspace:", currentWorkspace);
 
     if (!currentWorkspace) {
-      console.log("No current workspace found, redirecting to workspace");
-      return res.redirect(
-        `${config.FRONTEND_ORIGIN}/workspace`
-      );
+      console.log("No current workspace found, redirecting to dashboard");
+      return res.redirect(`${config.FRONTEND_URL}/dashboard`);
     }
 
     console.log("Redirecting to workspace:", currentWorkspace);
-    return res.redirect(
-      `${config.FRONTEND_ORIGIN}/workspace/${currentWorkspace}`
-    );
+    return res.redirect(`${config.FRONTEND_URL}/workspace/${currentWorkspace}`);
   }
 );
 
-export const registerUserController = asyncHandler(
+export const registerUserController: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
     const body = registerSchema.parse({
       ...req.body,
@@ -49,7 +45,7 @@ export const registerUserController = asyncHandler(
   }
 );
 
-export const loginController = asyncHandler(
+export const loginController: RequestHandler = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate(
       "local",
@@ -83,7 +79,7 @@ export const loginController = asyncHandler(
   }
 );
 
-export const logOutController = asyncHandler(
+export const logOutController: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
     req.logout((err) => {
       if (err) {
@@ -94,7 +90,9 @@ export const logOutController = asyncHandler(
       }
     });
 
-    req.session = null;
+    req.session.destroy(() => {
+      console.log("Session destroyed");
+    });
     return res
       .status(HTTPSTATUS.OK)
       .json({ message: "Logged out successfully" });

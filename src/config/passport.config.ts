@@ -1,22 +1,21 @@
-import passport from "passport";
-import { Request } from "express";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { Strategy as LocalStrategy } from "passport-local";
-
-import { config } from "./app.config";
-import { NotFoundException } from "../utils/appError";
-import { ProviderEnum } from "../enums/account-provider.enum";
 import {
   loginOrCreateAccountService,
   verifyUserService,
 } from "../services/auth.service";
+import passport from "passport";
+import { Request } from "express";
+import { config } from "./app.config";
+import { NotFoundException } from "../utils/appError";
+import { Strategy as LocalStrategy } from "passport-local";
+import { ProviderEnum } from "../enums/account-provider.enum";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 passport.use(
   new GoogleStrategy(
     {
       clientID: config.GOOGLE_CLIENT_ID,
       clientSecret: config.GOOGLE_CLIENT_SECRET,
-      callbackURL: config.GOOGLE_CALLBACK_URL,
+      callbackURL: "/api/auth/google/callback",
       scope: ["profile", "email"],
       passReqToCallback: true,
     },

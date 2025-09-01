@@ -10,16 +10,14 @@ const connectDatabase = async () => {
       socketTimeoutMS: 45000,
     });
     console.log("Connected to Mongo database successfully");
-    
+
     // Test the connection
     if (mongoose.connection.db) {
       await mongoose.connection.db.admin().ping();
       console.log("MongoDB ping successful");
     }
-    
   } catch (error) {
     console.log("Error connecting to Mongo database:", error);
-    // Retry after 5 seconds
     setTimeout(connectDatabase, 5000);
   }
 };

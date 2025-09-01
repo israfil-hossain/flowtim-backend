@@ -7,35 +7,7 @@ services:
     env_file:
       - .env
     environment:
-      - NODE_ENV=production
-      - PORT=${PORT:-8000}
-      - BASE_PATH=${BASE_PATH:-/api}
-      - MONGO_URI=mongodb://mongo:27017/flowtim_db
+      NODE_ENV: production
+      PORT: ${PORT:-8000}
     ports:
       - "${PORT:-8000}:${PORT:-8000}"
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('net').connect(process.env.PORT||8000,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-    depends_on:
-      mongo:
-        condition: service_healthy
-
-  mongo:
-    image: mongo:7.0
-    restart: unless-stopped
-    volumes:
-      - mongo_data:/data/db
-    environment:
-      - MONGO_INITDB_DATABASE=${MONGO_DB_NAME:-flowtim_db}
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-volumes:
-  mongo_data:
-      
- 

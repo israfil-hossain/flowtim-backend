@@ -23,7 +23,6 @@ FROM deps AS builder
 
 COPY tsconfig.json ./
 COPY src ./src
-COPY mongo-init.js ./mongo-init.js
 
 RUN yarn build
 
