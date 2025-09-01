@@ -90,9 +90,11 @@ export const logOutController: RequestHandler = asyncHandler(
       }
     });
 
-    req.session.destroy(() => {
-      console.log("Session destroyed");
-    });
+    if (req.session) {
+      req.session.destroy(() => {
+        console.log("Session destroyed");
+      });
+    }
     return res
       .status(HTTPSTATUS.OK)
       .json({ message: "Logged out successfully" });
