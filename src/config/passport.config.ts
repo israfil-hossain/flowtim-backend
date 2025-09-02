@@ -10,6 +10,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { ProviderEnum } from "../enums/account-provider.enum";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
+// Google OAuth Strategy
 passport.use(
   new GoogleStrategy(
     {
@@ -19,11 +20,12 @@ passport.use(
       scope: ["profile", "email"],
       passReqToCallback: true,
     },
-    async (req: Request, accessToken, refreshToken, profile, done) => {
+    async (_req: Request, _accessToken: string, _refreshToken: string, profile: any, done: any) => {
       try {
         const { email, sub: googleId, picture } = profile._json;
-        console.log(profile, "profile");
-        console.log(googleId, "googleId");
+        console.log("Google OAuth - Profile:", profile.displayName);
+        console.log("Google OAuth - ID:", googleId);
+        
         if (!googleId) {
           throw new NotFoundException("Google ID (sub) is missing");
         }
@@ -35,14 +37,18 @@ passport.use(
           picture: picture,
           email: email,
         });
+        
+        console.log("Google OAuth - User created/found:", user._id);
         done(null, user);
       } catch (error) {
+        console.error("Google OAuth error:", error);
         done(error, false);
       }
     }
   )
 );
 
+// Local Strategy for email/password login
 passport.use(
   new LocalStrategy(
     {
@@ -50,31 +56,47 @@ passport.use(
       passwordField: "password",
       session: true,
     },
-    async (email, password, done) => {
+    async (email: string, password: string, done: any) => {
       try {
+        console.log("Local auth attempt for email:", email);
         const user = await verifyUserService({ email, password });
+        console.log("Local auth successful for user:", user._id);
         return done(null, user);
       } catch (error: any) {
+        console.error("Local auth failed:", error?.message);
         return done(error, false, { message: error?.message });
       }
     }
   )
 );
 
-passport.serializeUser((user: any, done) => {
-  console.log("Serializing user:", user._id);
-  done(null, user._id);
+// Serialize user - store only user ID in session
+passport.serializeUser((user: any, done: any) => {
+  console.log("📝 Serializing user ID:", user._id);
+  done(null, user._id.toString());
 });
 
-passport.deserializeUser(async (id: string, done) => {
+// Deserialize user - fetch user from database using stored ID
+passport.deserializeUser(async (id: string, done: any) => {
   try {
-    console.log("Deserializing user ID:", id);
-    const UserModel = require("../models/user.model").default;
-    const user = await UserModel.findById(id);
-    console.log("Found user during deserialization:", user ? user._id : "not found");
+    console.log("🔍 Deserializing user ID:", id);
+    
+    // Import here to avoid circular dependency
+    const UserModel = (await import("../models/user.model")).default;
+    
+    const user = await UserModel.findById(id).select("-password");
+    
+    if (!user) {
+      console.log("❌ User not found during deserialization:", id);
+      return done(null, false);
+    }
+    
+    console.log("✅ User deserialized successfully:", user._id);
     done(null, user);
   } catch (error) {
-    console.error("Error during deserialization:", error);
+    console.error("❌ Error during user deserialization:", error);
     done(error, null);
   }
 });
+
+export default passport;

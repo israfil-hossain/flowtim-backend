@@ -1,31 +1,41 @@
 import { NextFunction, Request, Response } from "express";
 import { UnauthorizedException } from "../utils/appError";
-import { isValidSession } from "../utils/auth.utils";
 
 const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-  console.log("=== AUTH CHECK DEBUG ===");
-  console.log("Session ID:", req.sessionID);
+  console.log("🔐 Authentication Check Started");
+  console.log("Session ID:", req.sessionID || "none");
   console.log("Session exists:", !!req.session);
   console.log("User exists:", !!req.user);
   console.log("User ID:", req.user?._id || "undefined");
-  console.log("Cookies present:", req.headers.cookie ? "YES" : "NO");
-  console.log("Cookie header:", req.headers.cookie);
-  console.log("Is authenticated (passport):", req.isAuthenticated ? req.isAuthenticated() : "no isAuthenticated method");
-  
-  if (req.session) {
-    console.log("Session passport data:", (req.session as any).passport);
-    console.log("Session has passport user:", !!(req.session as any).passport?.user);
+  console.log("Cookies:", req.headers.cookie ? "present" : "missing");
+
+  // Check if session exists
+  if (!req.session) {
+    console.log("❌ No session found");
+    throw new UnauthorizedException("No session found. Please log in.");
   }
 
-  // Use utility function to validate session
-  if (!isValidSession(req)) {
-    console.log("Authentication failed - invalid session");
-    console.log("=== AUTH CHECK END ===");
+  // Check session passport data
+  const passportData = (req.session as any).passport;
+  console.log("Passport data in session:", !!passportData);
+  
+  if (passportData) {
+    console.log("Passport user ID in session:", passportData.user);
+  }
+
+  // Check if user is properly authenticated
+  if (!req.user || !req.user._id) {
+    console.log("❌ User not authenticated - no req.user");
     throw new UnauthorizedException("Authentication required. Please log in.");
   }
 
-  console.log("Authentication successful for user:", req.user!._id);
-  console.log("=== AUTH CHECK END ===");
+  // Additional check using Passport's built-in method
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    console.log("❌ Passport authentication check failed");
+    throw new UnauthorizedException("Invalid authentication state. Please log in.");
+  }
+
+  console.log("✅ Authentication successful for user:", req.user._id);
   next();
 };
 

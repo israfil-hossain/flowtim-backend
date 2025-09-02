@@ -50,10 +50,10 @@ export const getCookieConfig = (
   if (isProd) {
     // Production settings for cross-domain
     cookieConfig.sameSite = "none";
-    // Temporarily disable domain to test
-    // if (config.COOKIE_DOMAIN) {
-    //   cookieConfig.domain = config.COOKIE_DOMAIN;
-    // }
+    // Set domain for cross-subdomain sharing
+    if (config.COOKIE_DOMAIN) {
+      cookieConfig.domain = config.COOKIE_DOMAIN;
+    }
   } else {
     // Development settings
     cookieConfig.sameSite = "lax";

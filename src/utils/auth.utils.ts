@@ -7,7 +7,7 @@ export const setSecureAuthCookie = (res: Response, sessionId: string) => {
   
   res.cookie(cookieName, sessionId, cookieOptions);
   
-  console.log(`Set secure auth cookie: ${cookieName}`);
+  console.log(`🍪 Set secure auth cookie: ${cookieName}`);
 };
 
 export const clearAuthCookie = (res: Response) => {
@@ -16,16 +16,21 @@ export const clearAuthCookie = (res: Response) => {
   
   res.clearCookie(cookieName, cookieOptions);
   
-  console.log(`Cleared auth cookie: ${cookieName}`);
+  console.log(`🗑️ Cleared auth cookie: ${cookieName}`);
 };
 
 export const isValidSession = (req: any): boolean => {
-  return !!(
-    req.session && 
-    req.sessionID && 
-    req.user && 
-    req.user._id &&
-    req.isAuthenticated &&
-    req.isAuthenticated()
-  );
+  const hasSession = !!(req.session && req.sessionID);
+  const hasUser = !!(req.user && req.user._id);
+  const isAuthenticated = !!(req.isAuthenticated && req.isAuthenticated());
+  
+  console.log("Session validation:", {
+    hasSession,
+    hasUser,
+    isAuthenticated,
+    sessionId: req.sessionID || "none",
+    userId: req.user?._id || "none"
+  });
+  
+  return hasSession && hasUser && isAuthenticated;
 };
