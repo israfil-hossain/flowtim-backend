@@ -61,5 +61,20 @@ passport.use(
   )
 );
 
-passport.serializeUser((user: any, done) => done(null, user));
-passport.deserializeUser((user: any, done) => done(null, user));
+passport.serializeUser((user: any, done) => {
+  console.log("Serializing user:", user._id);
+  done(null, user._id);
+});
+
+passport.deserializeUser(async (id: string, done) => {
+  try {
+    console.log("Deserializing user ID:", id);
+    const UserModel = require("../models/user.model").default;
+    const user = await UserModel.findById(id);
+    console.log("Found user during deserialization:", user ? user._id : "not found");
+    done(null, user);
+  } catch (error) {
+    console.error("Error during deserialization:", error);
+    done(error, null);
+  }
+});

@@ -13,7 +13,8 @@ const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   console.log("Is authenticated (passport):", req.isAuthenticated ? req.isAuthenticated() : "no isAuthenticated method");
   
   if (req.session) {
-    console.log("Session data:", JSON.stringify(req.session, null, 2));
+    console.log("Session passport data:", (req.session as any).passport);
+    console.log("Session has passport user:", !!(req.session as any).passport?.user);
   }
 
   // Use utility function to validate session
