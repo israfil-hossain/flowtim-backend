@@ -59,8 +59,12 @@ export const getSessionConfig = (
 };
 
 export const getCorsConfig = (options?: Partial<CorsOptions>): CorsOptions => {
+  const allowedOrigins = config.ALLOWED_ORIGINS?.length 
+    ? config.ALLOWED_ORIGINS 
+    : [config.FRONTEND_URL];
+
   return {
-    origin: config.ALLOWED_ORIGINS,
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
