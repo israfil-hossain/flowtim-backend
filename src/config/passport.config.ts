@@ -72,7 +72,8 @@ passport.use(
 
 // Serialize user - store only user ID in session
 passport.serializeUser((user: any, done: any) => {
-  console.log("📝 Serializing user ID:", user._id);
+  console.log("📝 SERIALIZE USER CALLED - ID:", user._id);
+  console.log("📝 User object:", user);
   done(null, user._id.toString());
 });
 

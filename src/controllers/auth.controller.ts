@@ -67,19 +67,36 @@ export const loginController: RequestHandler = asyncHandler(
 
         req.logIn(user, (err) => {
           if (err) {
+            console.error("❌ req.logIn error:", err);
             return next(err);
           }
 
-          console.log("Login successful for user:", user._id);
-          console.log("Session ID:", req.sessionID);
-          console.log("Session cookie config:", req.session?.cookie);
-          console.log("Environment:", config.NODE_ENV);
-          console.log("Cookie domain:", config.COOKIE_DOMAIN);
+          console.log("✅ Login successful for user:", user._id);
+          console.log("📋 Session ID:", req.sessionID);
+          console.log("🍪 Session cookie config:", req.session?.cookie);
+          console.log("🌍 Environment:", config.NODE_ENV);
+          console.log("🏠 Cookie domain:", config.COOKIE_DOMAIN);
+          
+          // Log passport data after login
+          console.log("🎫 Passport data:", (req.session as any)?.passport);
+          console.log("👤 req.user after login:", !!req.user);
+          console.log("🔐 isAuthenticated:", req.isAuthenticated ? req.isAuthenticated() : false);
 
-          return res.status(HTTPSTATUS.OK).json({
-            message: "Logged in successfully",
-            user,
-            sessionId: req.sessionID,
+          // Force save session to ensure passport data is persisted
+          req.session.save((saveErr) => {
+            if (saveErr) {
+              console.error("❌ Session save error:", saveErr);
+              return next(saveErr);
+            }
+            
+            console.log("💾 Session saved successfully");
+            console.log("🎫 Final passport data:", (req.session as any)?.passport);
+            
+            return res.status(HTTPSTATUS.OK).json({
+              message: "Logged in successfully",
+              user,
+              sessionId: req.sessionID,
+            });
           });
         });
       }
@@ -177,8 +194,10 @@ export const debugSessionController: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("=== SESSION DEBUG ===");
     console.log("Session ID:", req.sessionID);
-    console.log("Session:", req.session);
+    console.log("Session exists:", !!req.session);
+    console.log("Passport data:", (req.session as any)?.passport);
     console.log("User:", req.user);
+    console.log("User ID:", req.user?._id);
     console.log("Cookies:", req.headers.cookie);
     console.log("Is authenticated:", req.isAuthenticated ? req.isAuthenticated() : "no method");
     console.log("=== SESSION DEBUG END ===");
@@ -189,6 +208,7 @@ export const debugSessionController: RequestHandler = asyncHandler(
       hasSession: !!req.session,
       hasUser: !!req.user,
       user: req.user,
+      passportData: (req.session as any)?.passport,
       isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
       cookies: req.headers.cookie,
     });
