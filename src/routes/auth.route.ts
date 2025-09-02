@@ -8,6 +8,7 @@ import {
   registerUserController,
   validateSessionController,
   testCookieController,
+  debugSessionController,
 } from "../controllers/auth.controller";
 
 const failedUrl = `${config.FRONTEND_URL}/auth/google/callback/failure`;
@@ -18,6 +19,7 @@ router.post("/register", registerUserController);
 router.post("/login", loginController);
 router.get("/validate", validateSessionController);
 router.get("/test-cookie", testCookieController);
+router.get("/debug-session", debugSessionController);
 
 router.post("/logout", logOutController);
 

@@ -172,3 +172,25 @@ export const testCookieController: RequestHandler = asyncHandler(
     });
   }
 );
+
+export const debugSessionController: RequestHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    console.log("=== SESSION DEBUG ===");
+    console.log("Session ID:", req.sessionID);
+    console.log("Session:", req.session);
+    console.log("User:", req.user);
+    console.log("Cookies:", req.headers.cookie);
+    console.log("Is authenticated:", req.isAuthenticated ? req.isAuthenticated() : "no method");
+    console.log("=== SESSION DEBUG END ===");
+    
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Session debug info",
+      sessionId: req.sessionID,
+      hasSession: !!req.session,
+      hasUser: !!req.user,
+      user: req.user,
+      isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+      cookies: req.headers.cookie,
+    });
+  }
+);
