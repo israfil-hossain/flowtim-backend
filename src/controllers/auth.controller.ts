@@ -1,10 +1,11 @@
 import passport from "passport";
-import { config } from "../config/app.config";
+import { config, getCookieConfig } from "../config/app.config";
 import { HTTPSTATUS } from "../config/http.config";
 import { NextFunction, Request, Response, RequestHandler } from "express";
 import { registerSchema } from "../validation/auth.validation";
 import { registerUserService } from "../services/auth.service";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
+import { clearAuthCookie, isValidSession } from "../utils/auth.utils";
 
 export const googleLoginCallback: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
@@ -69,9 +70,16 @@ export const loginController: RequestHandler = asyncHandler(
             return next(err);
           }
 
+          console.log("Login successful for user:", user._id);
+          console.log("Session ID:", req.sessionID);
+          console.log("Session cookie config:", req.session?.cookie);
+          console.log("Environment:", config.NODE_ENV);
+          console.log("Cookie domain:", config.COOKIE_DOMAIN);
+
           return res.status(HTTPSTATUS.OK).json({
             message: "Logged in successfully",
             user,
+            sessionId: req.sessionID,
           });
         });
       }
@@ -91,12 +99,76 @@ export const logOutController: RequestHandler = asyncHandler(
     });
 
     if (req.session) {
-      req.session.destroy(() => {
-        console.log("Session destroyed");
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Session destroy error:", err);
+          return res
+            .status(HTTPSTATUS.INTERNAL_SERVER_ERROR)
+            .json({ error: "Failed to destroy session" });
+        }
+
+        // Clear the session cookie
+        clearAuthCookie(res);
+        
+        console.log("Session and cookie cleared successfully");
+        return res
+          .status(HTTPSTATUS.OK)
+          .json({ message: "Logged out successfully" });
+      });
+    } else {
+      return res
+        .status(HTTPSTATUS.OK)
+        .json({ message: "Logged out successfully" });
+    }
+  }
+);
+
+export const validateSessionController: RequestHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    console.log("Session validation check");
+    
+    const isValid = isValidSession(req);
+    
+    if (!isValid) {
+      return res.status(HTTPSTATUS.UNAUTHORIZED).json({
+        message: "Invalid session",
+        isAuthenticated: false,
       });
     }
-    return res
-      .status(HTTPSTATUS.OK)
-      .json({ message: "Logged out successfully" });
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Session is valid",
+      isAuthenticated: true,
+      user: req.user,
+      sessionId: req.sessionID,
+    });
+  }
+);
+
+export const testCookieController: RequestHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    console.log("Testing cookie setting...");
+    console.log("Environment:", config.NODE_ENV);
+    console.log("Cookie domain:", config.COOKIE_DOMAIN);
+    
+    const cookieConfig = getCookieConfig();
+    console.log("Cookie config:", cookieConfig);
+    
+    // Set a test cookie
+    res.cookie("test-cookie", "test-value", cookieConfig);
+    
+    // Also try setting with different configurations
+    res.cookie("test-simple", "simple-value", {
+      httpOnly: false,
+      secure: false,
+      sameSite: "lax"
+    });
+    
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Test cookies set",
+      cookieConfig,
+      environment: config.NODE_ENV,
+      domain: config.COOKIE_DOMAIN,
+    });
   }
 );

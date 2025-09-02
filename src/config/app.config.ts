@@ -34,16 +34,33 @@ export const isDev = config.NODE_ENV === "development";
 export const getCookieConfig = (
   options?: Partial<CookieOptions>
 ): CookieOptions => {
-  return {
+  const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+  
+  // For cross-domain cookies, we need secure: true and sameSite: "none"
+  // Domain should be set to allow subdomain access
+  const cookieConfig: CookieOptions = {
     httpOnly: true,
-    secure: isProd,
+    secure: isProd, // Must be true in production for sameSite: "none"
     path: "/",
-    sameSite: isProd ? "none" : "lax",
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    domain: isProd ? config.COOKIE_DOMAIN : undefined,
+    maxAge: maxAge,
+    expires: new Date(Date.now() + maxAge),
     ...options,
   };
+
+  if (isProd) {
+    // Production settings for cross-domain
+    cookieConfig.sameSite = "none";
+    // Only set domain if explicitly configured, otherwise let browser handle it
+    if (config.COOKIE_DOMAIN) {
+      cookieConfig.domain = config.COOKIE_DOMAIN;
+    }
+  } else {
+    // Development settings
+    cookieConfig.sameSite = "lax";
+    // No domain for localhost
+  }
+
+  return cookieConfig;
 };
 
 export const getSessionConfig = (
@@ -54,6 +71,7 @@ export const getSessionConfig = (
     secret: config.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    rolling: true, // Reset expiration on activity
     cookie: getCookieConfig(),
     ...options,
   };
