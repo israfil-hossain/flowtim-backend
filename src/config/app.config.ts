@@ -16,6 +16,7 @@ export const config = {
 
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? "",
+  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL ?? "",
 
   SESSION_SECRET: process.env.SESSION_SECRET ?? "",
   SESSION_EXPIRES_IN: process.env.SESSION_EXPIRES_IN ?? "",
@@ -64,7 +65,7 @@ export const getCorsConfig = (options?: Partial<CorsOptions>): CorsOptions => {
     : [config.FRONTEND_URL];
 
   return {
-    origin: allowedOrigins,
+    origin: config.FRONTEND_URL,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
