@@ -65,7 +65,7 @@ export const getCorsConfig = (options?: Partial<CorsOptions>): CorsOptions => {
     : [config.FRONTEND_URL];
 
   return {
-    origin: config.FRONTEND_URL,
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
