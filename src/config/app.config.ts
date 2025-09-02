@@ -49,8 +49,8 @@ export const getSessionConfig = (
   options: Partial<SessionOptions>
 ): SessionOptions => {
   return {
-    name: "flowtim",
-    secret: "flowtim-secret",
+    name: isProd ? "__Secure-flowtim" : "flowtim",
+    secret: config.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: getCookieConfig(),
@@ -59,24 +59,8 @@ export const getSessionConfig = (
 };
 
 export const getCorsConfig = (options?: Partial<CorsOptions>): CorsOptions => {
-  console.log("CORS allowed origins:", config.ALLOWED_ORIGINS);
-  
   return {
-    origin: (origin, callback) => {
-      console.log("CORS request from origin:", origin);
-      
-      // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin) {
-        return callback(null, true);
-      }
-      
-      if (config.ALLOWED_ORIGINS?.includes(origin)) {
-        return callback(null, true);
-      }
-      
-      console.warn("CORS blocked origin:", origin);
-      return callback(new Error("Not allowed by CORS"), false);
-    },
+    origin: config.ALLOWED_ORIGINS,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
