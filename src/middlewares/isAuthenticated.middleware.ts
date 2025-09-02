@@ -14,7 +14,7 @@ const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
     throw new UnauthorizedException("Authentication required. Please log in.");
   }
 
-  console.log("Authentication successful for user:", req.user._id);
+  console.log("Authentication successful for user:", req.user!._id);
   next();
 };
 
