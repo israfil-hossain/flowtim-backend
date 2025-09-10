@@ -39,6 +39,12 @@ app.use(passport.session());
 
 app.use(loggerMiddleware);
 
+// Debug auth middleware (development only)
+if (config.NODE_ENV === "development") {
+  const debugAuth = require("./middlewares/debugAuth.middleware").default;
+  app.use(debugAuth);
+}
+
 app.use("/api", appRoutes);
 
 // handle not found
