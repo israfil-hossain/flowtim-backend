@@ -20,6 +20,19 @@ router.post("/login", loginController);
 router.get("/validate", validateSessionController);
 router.get("/test-cookie", testCookieController);
 router.get("/debug-session", debugSessionController);
+router.get("/test-session", (req, res) => {
+  (req.session as any).test = "test-value";
+  req.session.save((err) => {
+    if (err) {
+      return res.status(500).json({ error: "Session save failed" });
+    }
+    res.json({
+      message: "Session test set",
+      sessionId: req.sessionID,
+      testValue: (req.session as any).test
+    });
+  });
+});
 
 router.post("/logout", logOutController);
 

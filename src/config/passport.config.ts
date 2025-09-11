@@ -81,21 +81,26 @@ passport.serializeUser((user: any, done: any) => {
 passport.deserializeUser(async (id: string, done: any) => {
   try {
     console.log("🔍 Deserializing user ID:", id);
-    
+
     // Import here to avoid circular dependency
     const UserModel = (await import("../models/user.model")).default;
-    
+
     const user = await UserModel.findById(id).select("-password");
-    
+
     if (!user) {
       console.log("❌ User not found during deserialization:", id);
+      console.log("❌ Available users in DB (first 5):");
+      const allUsers = await UserModel.find({}).select("_id").limit(5);
+      console.log(allUsers.map(u => u._id.toString()));
       return done(null, false);
     }
-    
+
     console.log("✅ User deserialized successfully:", user._id);
+    console.log("✅ User email:", user.email);
     done(null, user);
   } catch (error) {
     console.error("❌ Error during user deserialization:", error);
+    console.error("❌ Error details:", error.message);
     done(error, null);
   }
 });
