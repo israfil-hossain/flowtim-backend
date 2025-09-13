@@ -83,11 +83,11 @@ export const getCorsConfig = (options?: Partial<CorsOptions>): CorsOptions => {
     : [config.FRONTEND_URL];
 
   return {
-    origin: allowedOrigins,
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-request-id"],
+    exposedHeaders: ["Content-Type", "Authorization", "x-request-id"],
     maxAge: 86400,
     ...options,
   };
