@@ -14,8 +14,6 @@ import {
   logOutController,
   registerUserController,
   validateSessionController,
-  testCookieController,
-  debugSessionController,
 } from "../controllers/auth.controller";
 
 const failedUrl = `${config.FRONTEND_URL}/auth/google/callback/failure`;
@@ -127,53 +125,6 @@ router.post("/login", loginController);
  */
 router.get("/validate", validateSessionController);
 
-/**
- * @swagger
- * /api/auth/test-cookie:
- *   get:
- *     tags: [Authentication]
- *     summary: Test cookie functionality (development only)
- *     responses:
- *       200:
- *         description: Cookie test result
- */
-router.get("/test-cookie", testCookieController);
-
-/**
- * @swagger
- * /api/auth/debug-session:
- *   get:
- *     tags: [Authentication]
- *     summary: Debug session data (development only)
- *     responses:
- *       200:
- *         description: Session debug information
- */
-router.get("/debug-session", debugSessionController);
-
-/**
- * @swagger
- * /api/auth/test-session:
- *   get:
- *     tags: [Authentication]
- *     summary: Test session functionality (development only)
- *     responses:
- *       200:
- *         description: Session test result
- */
-router.get("/test-session", (req, res) => {
-  (req.session as any).test = "test-value";
-  req.session.save((err) => {
-    if (err) {
-      return res.status(500).json({ error: "Session save failed" });
-    }
-    res.json({
-      message: "Session test set",
-      sessionId: req.sessionID,
-      testValue: (req.session as any).test
-    });
-  });
-});
 
 /**
  * @swagger
