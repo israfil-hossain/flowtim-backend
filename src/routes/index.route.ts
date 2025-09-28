@@ -7,6 +7,16 @@ import memberRoutes from "./member.route";
 import taskRoutes from "./task.route";
 import authRoutes from "./auth.route";
 import userRoutes from "./user.route";
+import documentRoutes from "./document.route";
+import chatRoutes from "./chat.route";
+import fileRoutes from "./file.route";
+import subtaskRoutes from "./subtask.route";
+import notificationRoutes from "./notification.route";
+import analyticsRoutes from "./analytics.route";
+import templateRoutes from "./template.route";
+import kanbanRoutes from "./kanban.route";
+import ganttRoutes from "./gantt.route";
+import automationRoutes from "./automation.route";
 
 const router = express.Router();
 
@@ -16,6 +26,16 @@ router.use("/project", projectRoutes);
 router.use("/task", taskRoutes);
 router.use("/auth", authRoutes);
 router.use("/user", userRoutes);
+router.use("/document", documentRoutes);
+router.use("/chat", chatRoutes);
+router.use("/files", fileRoutes);
+router.use("/subtasks", subtaskRoutes);
+router.use("/notifications", notificationRoutes);
+router.use("/analytics", analyticsRoutes);
+router.use("/templates", templateRoutes);
+router.use("/kanban", kanbanRoutes);
+router.use("/gantt", ganttRoutes);
+router.use("/automations", automationRoutes);
 
 // health check route
 router.get("/health", (req: Request, res: Response) => {

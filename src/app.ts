@@ -6,11 +6,13 @@ import "./config/passport.config";
 import compression from "compression";
 import session from "express-session";
 import MongoStore from "connect-mongo";
+import swaggerUi from "swagger-ui-express";
 import appRoutes from "./routes/index.route";
 import { HTTPSTATUS } from "./config/http.config";
 import loggerMiddleware from "./middlewares/logger.middleware";
 import { getSessionConfig, getCorsConfig, config } from "./config/app.config";
 import { errorHandler } from "./middlewares/errorHandler.middleware";
+import { swaggerSpec } from "./config/swagger.config";
 
 const app = express();
 
@@ -43,6 +45,22 @@ app.use(loggerMiddleware);
 if (config.NODE_ENV === "development") {
   const debugAuth = require("./middlewares/debugAuth.middleware").default;
   app.use(debugAuth);
+}
+
+// Swagger documentation
+if (config.NODE_ENV === "development") {
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  }));
+  
+  // Swagger JSON endpoint
+  app.get("/api-docs.json", (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(swaggerSpec);
+  });
 }
 
 app.use("/api", appRoutes);

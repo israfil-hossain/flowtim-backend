@@ -18,6 +18,10 @@ export interface TaskDocument extends Document {
   assignedTo: mongoose.Types.ObjectId | null;
   createdBy: mongoose.Types.ObjectId;
   dueDate: Date | null;
+  parentTask?: mongoose.Types.ObjectId;
+  subtaskCount: number;
+  completionPercentage: number;
+  subtaskOrder?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -72,6 +76,24 @@ const taskSchema = new Schema<TaskDocument>(
     dueDate: {
       type: Date,
       default: null,
+    },
+    parentTask: {
+      type: Schema.Types.ObjectId,
+      ref: "Task",
+    },
+    subtaskCount: {
+      type: Number,
+      default: 0,
+    },
+    completionPercentage: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    subtaskOrder: {
+      type: Number,
+      default: 0,
     },
   },
   {
