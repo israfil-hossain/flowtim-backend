@@ -4,7 +4,9 @@ import jwt from "jsonwebtoken";
 import UserStatusModel from "../models/user-status.model";
 import ChannelMemberModel from "../models/channel-member.model";
 import MessageModel from "../models/message.model";
+import UserModel from "../models/user.model";
 import { config } from "../config/app.config";
+import { verifyAccessToken } from "../utils/auth.utils";
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -50,39 +52,40 @@ class SocketService {
     // Authentication middleware
     this.io.use(async (socket: AuthenticatedSocket, next) => {
       try {
-        const token = socket.handshake.auth.token || socket.handshake.headers.authorization;
+        // Try to get token from auth or authorization header
+        let token = socket.handshake.auth.token || socket.handshake.headers.authorization;
+        
+        // If token starts with "Bearer ", extract the actual token
+        if (token && token.startsWith('Bearer ')) {
+          token = token.substring(7);
+        }
         
         if (!token) {
           return next(new Error("Authentication token required"));
         }
 
-        // For session-based auth, you might need to verify session differently
-        // This is a placeholder for JWT verification
-        // In your case, you might want to check the session cookie instead
+        // Verify JWT token
+        const payload = verifyAccessToken(token);
         
-        const sessionId = socket.handshake.headers.cookie
-          ?.split(';')
-          .find(c => c.trim().startsWith('connect.sid='))
-          ?.split('=')[1];
-
-        if (!sessionId) {
-          return next(new Error("Session required"));
+        if (!payload) {
+          return next(new Error("Invalid or expired token"));
         }
 
-        // You would verify the session here with your session store
-        // For now, we'll extract user info from the client
-        const { userId, email, name } = socket.handshake.auth;
+        // Get user details from database
+        const user = await UserModel.findById(payload.userId).select('-password');
         
-        if (!userId || !email || !name) {
-          return next(new Error("User information required"));
+        if (!user) {
+          return next(new Error("User not found"));
         }
 
-        socket.userId = userId;
-        socket.userEmail = email;
-        socket.userName = name;
+        // Attach user info to socket
+        socket.userId = (user._id as any).toString();
+        socket.userEmail = user.email;
+        socket.userName = user.name;
         
         next();
       } catch (error) {
+        console.error("Socket authentication error:", error);
         next(new Error("Authentication failed"));
       }
     });
@@ -98,7 +101,7 @@ class SocketService {
   }
 
   private async handleUserConnection(socket: AuthenticatedSocket) {
-    const userId = socket.userId;
+    const userId = socket.userId!;
     
     // Track connected socket
     if (!this.connectedUsers.has(userId)) {
@@ -117,7 +120,7 @@ class SocketService {
         // Notify others in workspace
         socket.to(`workspace:${workspaceId}`).emit("user:online", {
           userId,
-          userName: socket.userName,
+          userName: socket.userName!,
           status: 'online',
         });
       }
@@ -202,7 +205,7 @@ class SocketService {
     // Notify others in channel
     socket.to(`channel:${channelId}`).emit("user:typing", {
       userId,
-      userName: socket.userName,
+      userName: socket.userName!,
       channelId,
       isTyping: true,
     });
@@ -230,7 +233,7 @@ class SocketService {
     // Notify others in channel
     socket.to(`channel:${channelId}`).emit("user:typing", {
       userId,
-      userName: socket.userName,
+      userName: socket.userName!,
       channelId,
       isTyping: false,
     });
@@ -239,7 +242,7 @@ class SocketService {
   private async handleMessageSend(socket: AuthenticatedSocket, data: MessageData) {
     try {
       const { channelId, workspaceId, content, replyToId, mentions } = data;
-      const userId = socket.userId;
+      const userId = socket.userId!;
 
       // Verify user is member of channel
       const membership = await ChannelMemberModel.findOne({
@@ -284,7 +287,7 @@ class SocketService {
       });
 
       // Stop typing for this user
-      await this.handleTypingStop(socket, { channelId, workspaceId, userId, userName: socket.userName });
+      await this.handleTypingStop(socket, { channelId, workspaceId, userId, userName: socket.userName! });
 
       // Broadcast to all channel members
       this.io.to(`channel:${channelId}`).emit("message:new", {
@@ -301,7 +304,7 @@ class SocketService {
   private async handleMessageEdit(socket: AuthenticatedSocket, data: { messageId: string, content: string }) {
     try {
       const { messageId, content } = data;
-      const userId = socket.userId;
+      const userId = socket.userId!;
 
       const message = await MessageModel.findById(messageId);
 
@@ -345,7 +348,7 @@ class SocketService {
   private async handleMessageDelete(socket: AuthenticatedSocket, data: { messageId: string }) {
     try {
       const { messageId } = data;
-      const userId = socket.userId;
+      const userId = socket.userId!;
 
       const message = await MessageModel.findById(messageId);
 
@@ -379,7 +382,7 @@ class SocketService {
   private async handleReactionAdd(socket: AuthenticatedSocket, data: { messageId: string, emoji: string }) {
     try {
       const { messageId, emoji } = data;
-      const userId = socket.userId;
+      const userId = socket.userId!;
 
       const MessageReactionModel = (await import('../models/message-reaction.model')).default;
       
@@ -430,14 +433,14 @@ class SocketService {
   private async handleStatusUpdate(socket: AuthenticatedSocket, data: { workspaceId: string, status: string, statusMessage?: string }) {
     try {
       const { workspaceId, status, statusMessage } = data;
-      const userId = socket.userId;
+      const userId = socket.userId!;
 
       await this.updateUserStatus(userId, workspaceId, status as any, statusMessage);
 
       // Broadcast to workspace
       socket.to(`workspace:${workspaceId}`).emit("user:status_update", {
         userId,
-        userName: socket.userName,
+        userName: socket.userName!,
         status,
         statusMessage,
         lastSeenAt: new Date(),
@@ -450,9 +453,9 @@ class SocketService {
   }
 
   private async handleUserDisconnection(socket: AuthenticatedSocket) {
-    const userId = socket.userId;
+    const userId = socket.userId!;
     
-    console.log(`User ${socket.userName} disconnected from socket ${socket.id}`);
+    console.log(`User ${socket.userName!} disconnected from socket ${socket.id}`);
 
     // Remove socket from connected users
     this.connectedUsers.get(userId)?.delete(socket.id);
@@ -487,7 +490,7 @@ class SocketService {
         // Notify channel that user stopped typing
         socket.to(`channel:${channelId}`).emit("user:typing", {
           userId,
-          userName: socket.userName,
+          userName: socket.userName!,
           channelId,
           isTyping: false,
         });

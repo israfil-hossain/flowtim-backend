@@ -236,7 +236,7 @@ export const removeDocumentAttachmentController = async (
 
     // Find and remove the attachment
     const attachmentIndex = document.attachments.findIndex(
-      attachment => attachment._id?.toString() === attachmentId
+      attachment => (attachment as any)._id?.toString() === attachmentId
     );
 
     if (attachmentIndex === -1) {
@@ -322,7 +322,7 @@ export const downloadDocumentAttachmentController = async (
 
     // Find the attachment
     const attachment = document.attachments.find(
-      att => att._id?.toString() === attachmentId
+      att => (att as any)._id?.toString() === attachmentId
     );
 
     if (!attachment) {

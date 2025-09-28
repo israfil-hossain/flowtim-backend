@@ -206,11 +206,11 @@ export const createProjectFromTemplate = async (req: Request, res: Response) => 
         createdBy: userId,
         dueDate: taskDueDate,
         // Apply customizations if provided
-        assignedTo: customizations?.taskAssignments?.[templateTask._id.toString()] || null,
+        assignedTo: customizations?.taskAssignments?.[(templateTask._id as any).toString()] || null,
       });
 
       await task.save();
-      taskMap.set(templateTask._id.toString(), task._id);
+      taskMap.set((templateTask._id as any).toString(), task._id);
     }
 
     // Increment template usage count

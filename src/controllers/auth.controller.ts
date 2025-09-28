@@ -5,7 +5,16 @@ import { NextFunction, Request, Response, RequestHandler } from "express";
 import { registerSchema } from "../validation/auth.validation";
 import { registerUserService } from "../services/auth.service";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
-import { clearAuthCookie, isValidSession } from "../utils/auth.utils";
+import { 
+  clearAuthCookie, 
+  isValidSession, 
+  generateTokens, 
+  setTokenCookies, 
+  clearTokenCookies,
+  verifyRefreshToken,
+  extractTokenFromCookies 
+} from "../utils/auth.utils";
+import UserModel from "../models/user.model";
 
 export const googleLoginCallback: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
@@ -92,10 +101,20 @@ export const loginController: RequestHandler = asyncHandler(
             console.log("💾 Session saved successfully");
             console.log("🎫 Final passport data:", (req.session as any)?.passport);
             
+            // Generate JWT tokens
+            const tokens = generateTokens(user._id.toString(), user.email);
+            
+            // Set token cookies
+            setTokenCookies(res, tokens);
+            
             return res.status(HTTPSTATUS.OK).json({
               message: "Logged in successfully",
               user,
               sessionId: req.sessionID,
+              tokens: {
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken
+              }
             });
           });
         });
@@ -124,10 +143,11 @@ export const logOutController: RequestHandler = asyncHandler(
             .json({ error: "Failed to destroy session" });
         }
 
-        // Clear the session cookie
+        // Clear the session cookie and JWT tokens
         clearAuthCookie(res);
+        clearTokenCookies(res);
         
-        console.log("Session and cookie cleared successfully");
+        console.log("Session and all cookies cleared successfully");
         return res
           .status(HTTPSTATUS.OK)
           .json({ message: "Logged out successfully" });
@@ -158,6 +178,54 @@ export const validateSessionController: RequestHandler = asyncHandler(
       isAuthenticated: true,
       user: req.user,
       sessionId: req.sessionID,
+    });
+  }
+);
+
+export const refreshTokenController: RequestHandler = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { refreshToken: refreshTokenFromBody } = req.body;
+    const { refreshToken: refreshTokenFromCookie } = extractTokenFromCookies(req.cookies);
+    
+    // Use refresh token from body or cookie (prioritize body)
+    const refreshToken = refreshTokenFromBody || refreshTokenFromCookie;
+    
+    if (!refreshToken) {
+      return res.status(HTTPSTATUS.UNAUTHORIZED).json({
+        message: "Refresh token is required",
+      });
+    }
+
+    // Verify refresh token
+    const payload = verifyRefreshToken(refreshToken);
+    
+    if (!payload) {
+      return res.status(HTTPSTATUS.UNAUTHORIZED).json({
+        message: "Invalid or expired refresh token",
+      });
+    }
+
+    // Find user to ensure they still exist
+    const user = await UserModel.findById(payload.userId);
+    
+    if (!user) {
+      return res.status(HTTPSTATUS.UNAUTHORIZED).json({
+        message: "User not found",
+      });
+    }
+
+    // Generate new token pair
+    const newTokens = generateTokens((user._id as any).toString(), user.email);
+    
+    // Set new token cookies
+    setTokenCookies(res, newTokens);
+    
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Tokens refreshed successfully",
+      tokens: {
+        accessToken: newTokens.accessToken,
+        refreshToken: newTokens.refreshToken
+      }
     });
   }
 );

@@ -50,7 +50,7 @@ export const getAllChannelsController = async (
         lastReadAt: member.lastReadAt,
         notificationsEnabled: member.notificationsEnabled,
       }))
-      .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+      .sort((a, b) => new Date((b as any).lastMessageAt).getTime() - new Date((a as any).lastMessageAt).getTime());
 
     return res.status(HTTPSTATUS.OK).json({
       success: true,
@@ -264,7 +264,7 @@ export const sendMessageController = async (
 ) => {
   try {
     const { workspaceId, channelId } = req.params;
-    const { content, replyToId, mentions } = req.body;
+    const { content, replyToId, mentions, attachments } = req.body;
     const userId = req.user?._id;
 
     if (!userId) {
@@ -282,10 +282,11 @@ export const sendMessageController = async (
       });
     }
 
-    if (!content || content.trim().length === 0) {
+    // Content is optional when attachments are provided
+    if ((!content || content.trim().length === 0) && (!attachments || attachments.length === 0)) {
       return res.status(HTTPSTATUS.BAD_REQUEST).json({
         error: "EMPTY_MESSAGE",
-        message: "Message content cannot be empty",
+        message: "Message must have content or attachments",
       });
     }
 
@@ -304,10 +305,12 @@ export const sendMessageController = async (
     }
 
     const messageData: any = {
-      content: content.trim(),
+      content: content ? content.trim() : (attachments && attachments.length > 0 ? "📎 File attachment" : ""),
+      type: attachments && attachments.length > 0 ? (attachments.some((att: any) => att.mimeType?.startsWith('image/')) ? 'image' : 'file') : 'text',
       channelId,
       senderId: userId,
       mentions: mentions || [],
+      attachments: attachments || [],
     };
 
     if (replyToId && mongoose.Types.ObjectId.isValid(replyToId)) {

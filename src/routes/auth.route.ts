@@ -14,6 +14,7 @@ import {
   logOutController,
   registerUserController,
   validateSessionController,
+  refreshTokenController,
 } from "../controllers/auth.controller";
 
 const failedUrl = `${config.FRONTEND_URL}/auth/google/callback/failure`;
@@ -125,6 +126,47 @@ router.post("/login", loginController);
  */
 router.get("/validate", validateSessionController);
 
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     tags: [Authentication]
+ *     summary: Refresh access token using refresh token
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Refresh token (can also be sent via httpOnly cookie)
+ *     responses:
+ *       200:
+ *         description: Tokens refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 tokens:
+ *                   type: object
+ *                   properties:
+ *                     accessToken:
+ *                       type: string
+ *                     refreshToken:
+ *                       type: string
+ *       401:
+ *         description: Invalid or expired refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post("/refresh", refreshTokenController);
 
 /**
  * @swagger
