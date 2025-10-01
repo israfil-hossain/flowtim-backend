@@ -39,9 +39,13 @@ FROM base AS runtime
 
 # Create and use a non-root user
 RUN useradd -ms /bin/bash nodeuser
-USER nodeuser
 
 WORKDIR /app
+
+# Create directories with proper permissions before switching to non-root user
+RUN mkdir -p /app/public /app/uploads && chown -R nodeuser:nodeuser /app
+
+USER nodeuser
 
 ENV PORT=8000
 

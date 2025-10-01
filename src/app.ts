@@ -75,20 +75,37 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 const publicDir = path.join(__dirname, '../public');
 const uploadsDir = path.join(__dirname, '../uploads');
 
-if (!existsSync(publicDir)) {
-  mkdirSync(publicDir, { recursive: true });
+// Safely create directories if they don't exist and we have permissions
+try {
+  if (!existsSync(publicDir)) {
+    mkdirSync(publicDir, { recursive: true });
+  }
+} catch (error) {
+  console.warn('Warning: Could not create public directory, static file serving may be limited');
+}
+
+try {
+  if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (error) {
+  console.warn('Warning: Could not create uploads directory, file uploads may not work');
 }
 
 // Serve static files only from specific directories with security headers
-app.use('/public', express.static(publicDir, {
-  dotfiles: 'deny', // Deny access to dotfiles like .env
-  index: false // Disable directory listing
-}));
+if (existsSync(publicDir)) {
+  app.use('/public', express.static(publicDir, {
+    dotfiles: 'deny', // Deny access to dotfiles like .env
+    index: false // Disable directory listing
+  }));
+}
 
-app.use('/uploads', express.static(uploadsDir, {
-  dotfiles: 'deny',
-  index: false
-}));
+if (existsSync(uploadsDir)) {
+  app.use('/uploads', express.static(uploadsDir, {
+    dotfiles: 'deny',
+    index: false
+  }));
+}
 
 app.use(cors(getCorsConfig()));
 app.use(
@@ -124,7 +141,7 @@ if (config.NODE_ENV === "development") {
   }));
   
   // Swagger JSON endpoint
-  app.get("/api-docs.json", (req, res) => {
+  app.get("/api-docs.json", (_req, res) => {
     res.setHeader("Content-Type", "application/json");
     res.send(swaggerSpec);
   });
