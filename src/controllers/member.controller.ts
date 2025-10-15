@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
+import { getAuthenticatedUserId } from "../utils/auth-helpers";
 import { z } from "zod";
 import { HTTPSTATUS } from "../config/http.config";
 import { joinWorkspaceByInviteService } from "../services/member.service";
@@ -7,7 +8,7 @@ import { joinWorkspaceByInviteService } from "../services/member.service";
 export const joinWorkspaceController = asyncHandler(
   async (req: Request, res: Response) => {
     const inviteCode = z.string().parse(req.params.inviteCode);
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const { workspaceId, role } = await joinWorkspaceByInviteService(
       userId,

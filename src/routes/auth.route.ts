@@ -16,6 +16,7 @@ import {
   validateSessionController,
   refreshTokenController,
 } from "../controllers/auth.controller";
+import combinedAuth from "../middlewares/combinedAuth.middleware";
 
 const failedUrl = `${config.FRONTEND_URL}/auth/google/callback/failure`;
 
@@ -124,7 +125,7 @@ router.post("/login", loginController);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/validate", validateSessionController);
+router.get("/validate", combinedAuth, validateSessionController);
 
 /**
  * @swagger

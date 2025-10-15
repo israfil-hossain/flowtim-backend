@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
+import { getAuthenticatedUserId } from "../utils/auth-helpers";
 import {
   createTaskSchema,
   taskIdSchema,
@@ -21,7 +22,7 @@ import { HTTPSTATUS } from "../config/http.config";
 
 export const createTaskController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const body = createTaskSchema.parse(req.body);
     const projectId = projectIdSchema.parse(req.params.projectId);
@@ -46,7 +47,7 @@ export const createTaskController = asyncHandler(
 
 export const updateTaskController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const body = updateTaskSchema.parse(req.body);
 
@@ -73,7 +74,7 @@ export const updateTaskController = asyncHandler(
 
 export const getAllTasksController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);
 
@@ -111,7 +112,7 @@ export const getAllTasksController = asyncHandler(
 
 export const getTaskByIdController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const taskId = taskIdSchema.parse(req.params.id);
     const projectId = projectIdSchema.parse(req.params.projectId);
@@ -131,7 +132,7 @@ export const getTaskByIdController = asyncHandler(
 
 export const deleteTaskController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const taskId = taskIdSchema.parse(req.params.id);
     const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);

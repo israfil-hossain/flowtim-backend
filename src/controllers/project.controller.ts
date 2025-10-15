@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
+import { getAuthenticatedUserId } from "../utils/auth-helpers";
 import {
   createProjectSchema,
   projectIdSchema,
@@ -24,7 +25,7 @@ export const createProjectController = asyncHandler(
     const body = createProjectSchema.parse(req.body);
     const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);
 
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
     const { role } = await getMemberRoleInWorkspace(userId, workspaceId);
     roleGuard(role, [Permissions.CREATE_PROJECT]);
 
@@ -40,7 +41,7 @@ export const createProjectController = asyncHandler(
 export const getAllProjectsInWorkspaceController = asyncHandler(
   async (req: Request, res: Response) => {
     const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const { role } = await getMemberRoleInWorkspace(userId, workspaceId);
     roleGuard(role, [Permissions.VIEW_ONLY]);
@@ -71,7 +72,7 @@ export const getProjectByIdAndWorkspaceIdController = asyncHandler(
     const projectId = projectIdSchema.parse(req.params.id);
     const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);
 
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const { role } = await getMemberRoleInWorkspace(userId, workspaceId);
     roleGuard(role, [Permissions.VIEW_ONLY]);
@@ -93,7 +94,7 @@ export const getProjectAnalyticsController = asyncHandler(
     const projectId = projectIdSchema.parse(req.params.id);
     const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);
 
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const { role } = await getMemberRoleInWorkspace(userId, workspaceId);
     roleGuard(role, [Permissions.VIEW_ONLY]);
@@ -112,7 +113,7 @@ export const getProjectAnalyticsController = asyncHandler(
 
 export const updateProjectController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const projectId = projectIdSchema.parse(req.params.id);
     const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);
@@ -137,7 +138,7 @@ export const updateProjectController = asyncHandler(
 
 export const deleteProjectController = asyncHandler(
   async (req: Request, res: Response) => {
-    const userId = req.user?._id;
+    const userId = getAuthenticatedUserId(req);
 
     const projectId = projectIdSchema.parse(req.params.id);
     const workspaceId = workspaceIdSchema.parse(req.params.workspaceId);

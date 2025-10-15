@@ -91,7 +91,7 @@ passport.deserializeUser(async (id: string, done: any) => {
       console.log("❌ User not found during deserialization:", id);
       console.log("❌ Available users in DB (first 5):");
       const allUsers = await UserModel.find({}).select("_id").limit(5);
-      console.log(allUsers.map(u => (u._id as string).toString()));
+      console.log(allUsers.map(u => u._id.toString()));
       return done(null, false);
     }
 

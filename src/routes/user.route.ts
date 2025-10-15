@@ -7,7 +7,7 @@
 
 import { Router } from "express";
 import { getCurrentUserController } from "../controllers/user.controller";
-import isAuthenticated from "../middlewares/isAuthenticated.middleware";
+import combinedAuth from "../middlewares/combinedAuth.middleware";
 
 const router = Router();
 
@@ -36,6 +36,6 @@ const router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/current", isAuthenticated, getCurrentUserController);
+router.get("/current", combinedAuth, getCurrentUserController);
 
 export default router;

@@ -82,7 +82,7 @@ export const getCorsConfig = (options?: Partial<CorsOptions>): CorsOptions => {
     origin: true,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-request-id"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-request-id", "x-requested-with"],
     exposedHeaders: ["Content-Type", "Authorization", "x-request-id"],
     maxAge: 86400,
     ...options,
