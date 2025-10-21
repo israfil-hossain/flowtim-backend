@@ -53,9 +53,9 @@ export const combinedAuth = async (req: AuthenticatedRequest, res: Response, nex
     next();
   } catch (error) {
     if (error instanceof UnauthorizedException) {
-      throw error;
+      return next(error);
     }
-    throw new UnauthorizedException("Authentication failed");
+    return next(new UnauthorizedException("Authentication failed"));
   }
 };
 

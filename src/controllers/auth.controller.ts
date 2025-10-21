@@ -28,16 +28,17 @@ export const googleLoginCallback: RequestHandler = asyncHandler(
       );
     }
 
-    const currentWorkspace = req.user?.currentWorkspace;
-    console.log("Current workspace:", currentWorkspace);
+    // Generate JWT tokens for Google OAuth users
+    const tokens = generateTokens(req.user._id.toString(), req.user.email);
 
-    if (!currentWorkspace) {
-      console.log("No current workspace found, redirecting to dashboard");
-      return res.redirect(`${config.FRONTEND_URL}/dashboard`);
-    }
+    // Set token cookies
+    setTokenCookies(res, tokens);
 
-    console.log("Redirecting to workspace:", currentWorkspace);
-    return res.redirect(`${config.FRONTEND_URL}/workspace/${currentWorkspace}`);
+    console.log("✅ JWT tokens generated and set for Google OAuth user");
+    console.log("Redirecting to success callback page");
+
+    // Redirect to frontend success page, which will handle navigation
+    return res.redirect(`${config.FRONTEND_URL}/auth/google/callback/success`);
   }
 );
 
