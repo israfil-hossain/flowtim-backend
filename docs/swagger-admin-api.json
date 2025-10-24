@@ -1,0 +1,1133 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FlowTim Admin Panel API",
+    "description": "Admin panel API for managing users, workspaces, and platform settings",
+    "version": "1.0.0",
+    "contact": {
+      "name": "FlowTim API Support",
+      "email": "support@flowtim.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    },
+    {
+      "url": "https://api.flowtim.com",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Admin - Users",
+      "description": "User management endpoints"
+    },
+    {
+      "name": "Admin - Workspaces",
+      "description": "Workspace management endpoints"
+    },
+    {
+      "name": "Admin - Analytics",
+      "description": "Platform analytics and statistics"
+    },
+    {
+      "name": "Admin - Settings",
+      "description": "System configuration management"
+    },
+    {
+      "name": "Admin - Billing",
+      "description": "Billing and subscription management"
+    }
+  ],
+  "paths": {
+    "/api/admin/users": {
+      "get": {
+        "tags": ["Admin - Users"],
+        "summary": "Get all users",
+        "description": "Retrieve all users with pagination and search functionality. Requires admin access.",
+        "operationId": "getAllUsers",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of items per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search by name or email",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Users fetched successfully"
+                    },
+                    "users": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserSummary"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/api/admin/users/{userId}": {
+      "patch": {
+        "tags": ["Admin - Users"],
+        "summary": "Update user",
+        "description": "Update user status or admin privileges. Requires admin access.",
+        "operationId": "updateUser",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "User ID (MongoDB ObjectId)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{24}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isActive": {
+                    "type": "boolean",
+                    "description": "Activate or deactivate the user"
+                  },
+                  "isAdmin": {
+                    "type": "boolean",
+                    "description": "Grant or revoke admin privileges"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User updated successfully"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Admin - Users"],
+        "summary": "Delete user",
+        "description": "Soft delete user by setting isActive to false. Requires admin access.",
+        "operationId": "deleteUser",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "User ID (MongoDB ObjectId)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{24}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deactivated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User deactivated successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/api/admin/workspaces": {
+      "get": {
+        "tags": ["Admin - Workspaces"],
+        "summary": "Get all workspaces",
+        "description": "Retrieve all workspaces with pagination, owner info, and member count. Requires admin access.",
+        "operationId": "getAllWorkspaces",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of items per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search by workspace name or description",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspaces retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Workspaces fetched successfully"
+                    },
+                    "workspaces": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WorkspaceAdmin"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/api/admin/workspaces/{workspaceId}": {
+      "patch": {
+        "tags": ["Admin - Workspaces"],
+        "summary": "Update workspace",
+        "description": "Update workspace name or description. Requires admin access.",
+        "operationId": "updateWorkspace",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "Workspace ID (MongoDB ObjectId)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{24}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "New workspace name"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "New workspace description"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workspace updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Workspace updated successfully"
+                    },
+                    "workspace": {
+                      "$ref": "#/components/schemas/Workspace"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Admin - Workspaces"],
+        "summary": "Delete workspace",
+        "description": "Delete workspace and all related data (members, projects, tasks). Requires admin access.",
+        "operationId": "deleteWorkspace",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "Workspace ID (MongoDB ObjectId)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{24}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workspace deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Workspace and all related data deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/api/admin/analytics": {
+      "get": {
+        "tags": ["Admin - Analytics"],
+        "summary": "Get platform analytics",
+        "description": "Retrieve platform-wide statistics and system health metrics. Requires admin access.",
+        "operationId": "getAnalytics",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Analytics fetched successfully"
+                    },
+                    "analytics": {
+                      "$ref": "#/components/schemas/Analytics"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/api/admin/settings": {
+      "get": {
+        "tags": ["Admin - Settings"],
+        "summary": "Get system settings",
+        "description": "Retrieve system configuration settings. Requires admin access.",
+        "operationId": "getSettings",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Settings retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Settings fetched successfully"
+                    },
+                    "settings": {
+                      "$ref": "#/components/schemas/SystemSettings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Admin - Settings"],
+        "summary": "Update system settings",
+        "description": "Update system configuration settings. Requires admin access.",
+        "operationId": "updateSettings",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SystemSettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Settings updated successfully"
+                    },
+                    "settings": {
+                      "$ref": "#/components/schemas/SystemSettings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/api/admin/billing": {
+      "get": {
+        "tags": ["Admin - Billing"],
+        "summary": "Get billing overview",
+        "description": "Retrieve billing overview and subscription statistics. Requires admin access.",
+        "operationId": "getBilling",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Billing data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Billing data fetched successfully"
+                    },
+                    "billing": {
+                      "$ref": "#/components/schemas/BillingOverview"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT access token"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "accessToken",
+        "description": "JWT access token in cookie"
+      }
+    },
+    "schemas": {
+      "UserSummary": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john@example.com"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "isAdmin": {
+            "type": "boolean",
+            "example": false
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "lastLogin": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2024-01-20T14:25:00Z"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john@example.com"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "isAdmin": {
+            "type": "boolean",
+            "example": false
+          },
+          "profilePicture": {
+            "type": "string",
+            "nullable": true,
+            "example": "https://example.com/avatar.jpg"
+          },
+          "currentWorkspace": {
+            "type": "string",
+            "nullable": true,
+            "example": "507f1f77bcf86cd799439012"
+          },
+          "lastLogin": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2024-01-20T14:25:00Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-21T09:15:00Z"
+          }
+        }
+      },
+      "Workspace": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "507f1f77bcf86cd799439012"
+          },
+          "name": {
+            "type": "string",
+            "example": "My Workspace"
+          },
+          "description": {
+            "type": "string",
+            "example": "Team workspace for projects"
+          },
+          "owner": {
+            "type": "string",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "inviteCode": {
+            "type": "string",
+            "example": "abc123xyz"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-21T09:15:00Z"
+          }
+        }
+      },
+      "WorkspaceAdmin": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "507f1f77bcf86cd799439012"
+          },
+          "name": {
+            "type": "string",
+            "example": "My Workspace"
+          },
+          "description": {
+            "type": "string",
+            "example": "Team workspace for projects"
+          },
+          "owner": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "example": "507f1f77bcf86cd799439011"
+              },
+              "name": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "email": {
+                "type": "string",
+                "example": "john@example.com"
+              }
+            }
+          },
+          "inviteCode": {
+            "type": "string",
+            "example": "abc123xyz"
+          },
+          "memberCount": {
+            "type": "integer",
+            "example": 5
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-21T09:15:00Z"
+          }
+        }
+      },
+      "Analytics": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "example": 1250
+              },
+              "active": {
+                "type": "integer",
+                "example": 1100
+              },
+              "new": {
+                "type": "integer",
+                "description": "New users in last 30 days",
+                "example": 85
+              }
+            }
+          },
+          "workspaces": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "example": 320
+              },
+              "active": {
+                "type": "integer",
+                "description": "Active workspaces in last 30 days",
+                "example": 45
+              }
+            }
+          },
+          "projects": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "example": 890
+              }
+            }
+          },
+          "tasks": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "example": 15670
+              }
+            }
+          },
+          "system": {
+            "type": "object",
+            "properties": {
+              "uptime": {
+                "type": "number",
+                "description": "System uptime in seconds",
+                "example": 3456789
+              },
+              "memory": {
+                "type": "object",
+                "properties": {
+                  "rss": {
+                    "type": "integer",
+                    "description": "Resident Set Size in MB",
+                    "example": 245
+                  },
+                  "heapUsed": {
+                    "type": "integer",
+                    "description": "Heap memory used in MB",
+                    "example": 156
+                  },
+                  "heapTotal": {
+                    "type": "integer",
+                    "description": "Total heap memory in MB",
+                    "example": 200
+                  }
+                }
+              },
+              "nodeVersion": {
+                "type": "string",
+                "example": "v20.10.0"
+              }
+            }
+          }
+        }
+      },
+      "SystemSettings": {
+        "type": "object",
+        "properties": {
+          "maintenance": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "example": false
+              },
+              "message": {
+                "type": "string",
+                "example": ""
+              }
+            }
+          },
+          "registration": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "example": true
+              },
+              "requireEmailVerification": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          },
+          "features": {
+            "type": "object",
+            "properties": {
+              "workspaces": {
+                "type": "boolean",
+                "example": true
+              },
+              "projects": {
+                "type": "boolean",
+                "example": true
+              },
+              "tasks": {
+                "type": "boolean",
+                "example": true
+              },
+              "chat": {
+                "type": "boolean",
+                "example": true
+              },
+              "documents": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          }
+        }
+      },
+      "BillingOverview": {
+        "type": "object",
+        "properties": {
+          "totalRevenue": {
+            "type": "number",
+            "example": 0
+          },
+          "activeSubscriptions": {
+            "type": "integer",
+            "example": 0
+          },
+          "trialUsers": {
+            "type": "integer",
+            "example": 0
+          },
+          "churnRate": {
+            "type": "number",
+            "example": 0
+          },
+          "plans": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "description": "Total number of items",
+            "example": 45
+          },
+          "page": {
+            "type": "integer",
+            "description": "Current page number",
+            "example": 1
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Items per page",
+            "example": 10
+          },
+          "totalPages": {
+            "type": "integer",
+            "description": "Total number of pages",
+            "example": 5
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "type": "integer"
+          },
+          "errorCode": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "responses": {
+      "UnauthorizedError": {
+        "description": "Authentication required - No valid token provided",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "Authentication required",
+              "statusCode": 401,
+              "errorCode": "ACCESS_UNAUTHORIZED"
+            }
+          }
+        }
+      },
+      "ForbiddenError": {
+        "description": "Forbidden - Admin access required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "Admin access required",
+              "statusCode": 403,
+              "errorCode": "ACCESS_UNAUTHORIZED"
+            }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "Resource not found",
+              "statusCode": 404,
+              "errorCode": "RESOURCE_NOT_FOUND"
+            }
+          }
+        }
+      },
+      "BadRequestError": {
+        "description": "Bad request - Invalid input",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "Invalid user ID",
+              "statusCode": 400,
+              "errorCode": "VALIDATION_ERROR"
+            }
+          }
+        }
+      }
+    }
+  }
+}

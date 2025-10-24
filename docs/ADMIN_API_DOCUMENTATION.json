@@ -1,0 +1,660 @@
+{
+  "apiVersion": "1.0.0",
+  "basePath": "/api/admin",
+  "authentication": "Required - Bearer Token or Cookie",
+  "authorization": "Admin access required (isAdmin: true)",
+  "endpoints": [
+    {
+      "name": "Get All Users",
+      "method": "GET",
+      "path": "/api/admin/users",
+      "description": "Get all users with pagination and search functionality",
+      "authentication": "Required",
+      "authorization": "Admin only",
+      "queryParameters": {
+        "page": {
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "description": "Page number for pagination"
+        },
+        "limit": {
+          "type": "number",
+          "required": false,
+          "default": 10,
+          "description": "Number of items per page"
+        },
+        "search": {
+          "type": "string",
+          "required": false,
+          "default": "",
+          "description": "Search by name or email"
+        }
+      },
+      "successResponse": {
+        "status": 200,
+        "body": {
+          "message": "Users fetched successfully",
+          "users": [
+            {
+              "_id": "string",
+              "name": "string",
+              "email": "string",
+              "isActive": "boolean",
+              "isAdmin": "boolean",
+              "createdAt": "Date",
+              "lastLogin": "Date | null"
+            }
+          ],
+          "pagination": {
+            "total": "number",
+            "page": "number",
+            "limit": "number",
+            "totalPages": "number"
+          }
+        }
+      },
+      "errorResponses": [
+        {
+          "status": 401,
+          "description": "Unauthorized - No valid authentication"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Admin access required"
+        }
+      ]
+    },
+    {
+      "name": "Get All Workspaces",
+      "method": "GET",
+      "path": "/api/admin/workspaces",
+      "description": "Get all workspaces with pagination, owner info, and member count",
+      "authentication": "Required",
+      "authorization": "Admin only",
+      "queryParameters": {
+        "page": {
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "description": "Page number for pagination"
+        },
+        "limit": {
+          "type": "number",
+          "required": false,
+          "default": 10,
+          "description": "Number of items per page"
+        },
+        "search": {
+          "type": "string",
+          "required": false,
+          "default": "",
+          "description": "Search by workspace name or description"
+        }
+      },
+      "successResponse": {
+        "status": 200,
+        "body": {
+          "message": "Workspaces fetched successfully",
+          "workspaces": [
+            {
+              "_id": "string",
+              "name": "string",
+              "description": "string",
+              "owner": {
+                "_id": "string",
+                "name": "string",
+                "email": "string"
+              },
+              "inviteCode": "string",
+              "memberCount": "number",
+              "createdAt": "Date",
+              "updatedAt": "Date"
+            }
+          ],
+          "pagination": {
+            "total": "number",
+            "page": "number",
+            "limit": "number",
+            "totalPages": "number"
+          }
+        }
+      },
+      "errorResponses": [
+        {
+          "status": 401,
+          "description": "Unauthorized - No valid authentication"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Admin access required"
+        }
+      ]
+    },
+    {
+      "name": "Get Platform Analytics",
+      "method": "GET",
+      "path": "/api/admin/analytics",
+      "description": "Get platform-wide statistics and system health metrics",
+      "authentication": "Required",
+      "authorization": "Admin only",
+      "successResponse": {
+        "status": 200,
+        "body": {
+          "message": "Analytics fetched successfully",
+          "analytics": {
+            "users": {
+              "total": "number",
+              "active": "number",
+              "new": "number (last 30 days)"
+            },
+            "workspaces": {
+              "total": "number",
+              "active": "number (last 30 days)"
+            },
+            "projects": {
+              "total": "number"
+            },
+            "tasks": {
+              "total": "number"
+            },
+            "system": {
+              "uptime": "number (seconds)",
+              "memory": {
+                "rss": "number (MB)",
+                "heapUsed": "number (MB)",
+                "heapTotal": "number (MB)"
+              },
+              "nodeVersion": "string"
+            }
+          }
+        }
+      },
+      "errorResponses": [
+        {
+          "status": 401,
+          "description": "Unauthorized - No valid authentication"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Admin access required"
+        }
+      ]
+    },
+    {
+      "name": "Get System Settings",
+      "method": "GET",
+      "path": "/api/admin/settings",
+      "description": "Get system configuration settings",
+      "authentication": "Required",
+      "authorization": "Admin only",
+      "successResponse": {
+        "status": 200,
+        "body": {
+          "message": "Settings fetched successfully",
+          "settings": {
+            "maintenance": {
+              "enabled": "boolean",
+              "message": "string"
+            },
+            "registration": {
+              "enabled": "boolean",
+              "requireEmailVerification": "boolean"
+            },
+            "features": {
+              "workspaces": "boolean",
+              "projects": "boolean",
+              "tasks": "boolean",
+              "chat": "boolean",
+              "documents": "boolean"
+            }
+          }
+        }
+      },
+      "errorResponses": [
+        {
+          "status": 401,
+          "description": "Unauthorized - No valid authentication"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Admin access required"
+        }
+      ]
+    },
+    {
+      "name": "Update System Settings",
+      "method": "PUT",
+      "path": "/api/admin/settings",
+      "description": "Update system configuration settings",
+      "authentication": "Required",
+      "authorization": "Admin only",
+      "requestBody": {
+        "maintenance": {
+          "enabled": "boolean (optional)",
+          "message": "string (optional)"
+        },
+        "registration": {
+          "enabled": "boolean (optional)",
+          "requireEmailVerification": "boolean (optional)"
+        },
+        "features": {
+          "workspaces": "boolean (optional)",
+          "projects": "boolean (optional)",
+          "tasks": "boolean (optional)",
+          "chat": "boolean (optional)",
+          "documents": "boolean (optional)"
+        }
+      },
+      "successResponse": {
+        "status": 200,
+        "body": {
+          "message": "Settings updated successfully",
+          "settings": "Updated settings object"
+        }
+      },
+      "errorResponses": [
+        {
+          "status": 401,
+          "description": "Unauthorized - No valid authentication"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Admin access required"
+        }
+      ],
+      "auditLog": {
+        "action": "SETTINGS_UPDATE",
+        "resourceType": "settings",
+        "details": "Updates made to settings"
+      }
+    },
+    {
+      "name": "Get Billing Overview",
+      "method": "GET",
+      "path": "/api/admin/billing",
+      "description": "Get billing overview and subscription stats",
+      "authentication": "Required",
+      "authorization": "Admin only",
+      "successResponse": {
+        "status": 200,
+        "body": {
+          "message": "Billing data fetched successfully",
+          "billing": {
+            "totalRevenue": "number",
+            "activeSubscriptions": "number",
+            "trialUsers": "number",
+            "churnRate": "number",
+            "plans": "array"
+          }
+        }
+      },
+      "errorResponses": [
+        {
+          "status": 401,
+          "description": "Unauthorized - No valid authentication"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Admin access required"
+        }
+      ]
+    },
+    {
+      "name": "Update User",
+      "method": "PATCH",
+      "path": "/api/admin/users/:userId",
+      "description": "Update user (activate/deactivate, toggle admin status)",
+      "authentication": "Required",
+      "authorization": "Admin only",
+      "pathParameters": {
+        "userId": {
+          "type": "string",
+          "required": true,
+          "description": "MongoDB ObjectId of the user"
+        }
+      },
+      "requestBody": {
+        "isActive": {
+          "type": "boolean",
+          "required": false,
+          "description": "Activate or deactivate user"
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "required": false,
+          "description": "Grant or revoke admin privileges"
+        }
+      },
+      "successResponse": {
+        "status": 200,
+        "body": {
+          "message": "User updated successfully",
+          "user": {
+            "_id": "string",
+            "name": "string",
+            "email": "string",
+            "isActive": "boolean",
+            "isAdmin": "boolean",
+            "profilePicture": "string | null",
+            "currentWorkspace": "string | null",
+            "lastLogin": "Date | null",
+            "createdAt": "Date",
+            "updatedAt": "Date"
+          }
+        }
+      },
+      "errorResponses": [
+        {
+          "status": 400,
+          "description": "Bad Request - Invalid user ID"
+        },
+        {
+          "status": 401,
+          "description": "Unauthorized - No valid authentication"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Admin access required"
+        },
+        {
+          "status": 404,
+          "description": "Not Found - User not found"
+        }
+      ],
+      "auditLog": {
+        "action": "USER_UPDATE",
+        "resourceType": "user",
+        "resourceId": "userId",
+        "details": "Changes made to user"
+      }
+    },
+    {
+      "name": "Delete User",
+      "method": "DELETE",
+      "path": "/api/admin/users/:userId",
+      "description": "Soft delete or deactivate user (sets isActive to false)",
+      "authentication": "Required",
+      "authorization": "Admin only",
+      "pathParameters": {
+        "userId": {
+          "type": "string",
+          "required": true,
+          "description": "MongoDB ObjectId of the user"
+        }
+      },
+      "successResponse": {
+        "status": 200,
+        "body": {
+          "message": "User deactivated successfully"
+        }
+      },
+      "errorResponses": [
+        {
+          "status": 400,
+          "description": "Bad Request - Invalid user ID"
+        },
+        {
+          "status": 401,
+          "description": "Unauthorized - No valid authentication"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Admin access required"
+        },
+        {
+          "status": 404,
+          "description": "Not Found - User not found"
+        }
+      ],
+      "auditLog": {
+        "action": "USER_DELETE",
+        "resourceType": "user",
+        "resourceId": "userId"
+      }
+    },
+    {
+      "name": "Update Workspace",
+      "method": "PATCH",
+      "path": "/api/admin/workspaces/:workspaceId",
+      "description": "Update workspace settings",
+      "authentication": "Required",
+      "authorization": "Admin only",
+      "pathParameters": {
+        "workspaceId": {
+          "type": "string",
+          "required": true,
+          "description": "MongoDB ObjectId of the workspace"
+        }
+      },
+      "requestBody": {
+        "name": {
+          "type": "string",
+          "required": false,
+          "description": "New workspace name"
+        },
+        "description": {
+          "type": "string",
+          "required": false,
+          "description": "New workspace description"
+        }
+      },
+      "successResponse": {
+        "status": 200,
+        "body": {
+          "message": "Workspace updated successfully",
+          "workspace": {
+            "_id": "string",
+            "name": "string",
+            "description": "string",
+            "owner": "string (ObjectId)",
+            "inviteCode": "string",
+            "createdAt": "Date",
+            "updatedAt": "Date"
+          }
+        }
+      },
+      "errorResponses": [
+        {
+          "status": 400,
+          "description": "Bad Request - Invalid workspace ID"
+        },
+        {
+          "status": 401,
+          "description": "Unauthorized - No valid authentication"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Admin access required"
+        },
+        {
+          "status": 404,
+          "description": "Not Found - Workspace not found"
+        }
+      ],
+      "auditLog": {
+        "action": "WORKSPACE_UPDATE",
+        "resourceType": "workspace",
+        "resourceId": "workspaceId",
+        "details": "Changes made to workspace"
+      }
+    },
+    {
+      "name": "Delete Workspace",
+      "method": "DELETE",
+      "path": "/api/admin/workspaces/:workspaceId",
+      "description": "Delete workspace and all related data (members, projects, tasks)",
+      "authentication": "Required",
+      "authorization": "Admin only",
+      "pathParameters": {
+        "workspaceId": {
+          "type": "string",
+          "required": true,
+          "description": "MongoDB ObjectId of the workspace"
+        }
+      },
+      "successResponse": {
+        "status": 200,
+        "body": {
+          "message": "Workspace and all related data deleted successfully"
+        }
+      },
+      "errorResponses": [
+        {
+          "status": 400,
+          "description": "Bad Request - Invalid workspace ID"
+        },
+        {
+          "status": 401,
+          "description": "Unauthorized - No valid authentication"
+        },
+        {
+          "status": 403,
+          "description": "Forbidden - Admin access required"
+        },
+        {
+          "status": 404,
+          "description": "Not Found - Workspace not found"
+        }
+      ],
+      "auditLog": {
+        "action": "WORKSPACE_DELETE",
+        "resourceType": "workspace",
+        "resourceId": "workspaceId"
+      }
+    }
+  ],
+  "authentication": {
+    "type": "Bearer Token or Cookie",
+    "headerName": "Authorization",
+    "headerFormat": "Bearer <token>",
+    "cookieName": "accessToken",
+    "note": "Both authentication methods are supported via combinedAuth middleware"
+  },
+  "authorization": {
+    "requirement": "User must have isAdmin: true in their user document",
+    "middleware": "requireAdmin",
+    "errorCode": 403,
+    "errorMessage": "Admin access required"
+  },
+  "auditLogging": {
+    "description": "All admin actions are logged to the audit_logs collection",
+    "fields": {
+      "userId": "ObjectId of admin performing action",
+      "action": "Action type (e.g., USER_UPDATE, WORKSPACE_DELETE)",
+      "resourceType": "Type of resource affected",
+      "resourceId": "ID of affected resource",
+      "details": "Additional details about the action",
+      "ipAddress": "IP address of the admin",
+      "userAgent": "Browser/client user agent",
+      "createdAt": "Timestamp of action"
+    }
+  },
+  "examples": {
+    "getUsersWithPagination": {
+      "request": {
+        "method": "GET",
+        "url": "/api/admin/users?page=1&limit=20&search=john",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "Users fetched successfully",
+          "users": [
+            {
+              "_id": "507f1f77bcf86cd799439011",
+              "name": "John Doe",
+              "email": "john@example.com",
+              "isActive": true,
+              "isAdmin": false,
+              "createdAt": "2024-01-15T10:30:00Z",
+              "lastLogin": "2024-01-20T14:25:00Z"
+            }
+          ],
+          "pagination": {
+            "total": 45,
+            "page": 1,
+            "limit": 20,
+            "totalPages": 3
+          }
+        }
+      }
+    },
+    "updateUser": {
+      "request": {
+        "method": "PATCH",
+        "url": "/api/admin/users/507f1f77bcf86cd799439011",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "isActive": false,
+          "isAdmin": true
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "User updated successfully",
+          "user": {
+            "_id": "507f1f77bcf86cd799439011",
+            "name": "John Doe",
+            "email": "john@example.com",
+            "isActive": false,
+            "isAdmin": true,
+            "profilePicture": null,
+            "currentWorkspace": null,
+            "lastLogin": "2024-01-20T14:25:00Z",
+            "createdAt": "2024-01-15T10:30:00Z",
+            "updatedAt": "2024-01-21T09:15:00Z"
+          }
+        }
+      }
+    },
+    "getAnalytics": {
+      "request": {
+        "method": "GET",
+        "url": "/api/admin/analytics",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "Analytics fetched successfully",
+          "analytics": {
+            "users": {
+              "total": 1250,
+              "active": 1100,
+              "new": 85
+            },
+            "workspaces": {
+              "total": 320,
+              "active": 45
+            },
+            "projects": {
+              "total": 890
+            },
+            "tasks": {
+              "total": 15670
+            },
+            "system": {
+              "uptime": 3456789,
+              "memory": {
+                "rss": 245,
+                "heapUsed": 156,
+                "heapTotal": 200
+              },
+              "nodeVersion": "v20.10.0"
+            }
+          }
+        }
+      }
+    }
+  }
+}

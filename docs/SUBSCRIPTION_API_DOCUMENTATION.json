@@ -1,0 +1,619 @@
+{
+  "apiVersion": "1.0.0",
+  "title": "FlowTim Subscription & Billing API",
+  "description": "Complete API documentation for pricing plans, subscriptions, and payments",
+  "basePath": "/api",
+  "authentication": "Required - Bearer Token or Cookie (except pricing endpoints)",
+  "categories": [
+    {
+      "name": "Pricing Plans",
+      "description": "Public endpoints for viewing pricing plans",
+      "endpoints": [
+        {
+          "name": "Get All Pricing Plans",
+          "method": "GET",
+          "path": "/api/pricing/plans",
+          "description": "Get all active pricing plans",
+          "authentication": "Not Required",
+          "queryParameters": {},
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Pricing plans retrieved successfully",
+              "plans": [
+                {
+                  "_id": "string",
+                  "name": "string (Starter, Professional, Enterprise)",
+                  "description": "string",
+                  "monthlyPrice": "number",
+                  "yearlyPrice": "number",
+                  "stripePriceIdMonthly": "string",
+                  "stripePriceIdYearly": "string",
+                  "maxUsers": "number (-1 for unlimited)",
+                  "maxProjects": "number (-1 for unlimited)",
+                  "maxStorage": "number (in GB)",
+                  "features": {
+                    "basicTaskManagement": "boolean",
+                    "kanbanBoards": "boolean",
+                    "ganttCharts": "boolean",
+                    "timeTracking": "boolean",
+                    "fileSharing": "boolean",
+                    "teamChat": "boolean",
+                    "advancedAnalytics": "boolean",
+                    "customWorkflows": "boolean",
+                    "apiAccess": "boolean",
+                    "prioritySupport": "boolean",
+                    "customIntegrations": "boolean",
+                    "dedicatedSupport": "boolean",
+                    "sso": "boolean",
+                    "advancedSecurity": "boolean"
+                  },
+                  "isActive": "boolean",
+                  "isPopular": "boolean",
+                  "sortOrder": "number"
+                }
+              ]
+            }
+          },
+          "example": {
+            "request": "curl http://localhost:8000/api/pricing/plans",
+            "response": {
+              "message": "Pricing plans retrieved successfully",
+              "plans": [
+                {
+                  "name": "Starter",
+                  "monthlyPrice": 0,
+                  "yearlyPrice": 0,
+                  "maxUsers": 5,
+                  "maxProjects": 3,
+                  "maxStorage": 2
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Pricing Plan by ID",
+          "method": "GET",
+          "path": "/api/pricing/plans/:id",
+          "description": "Get single pricing plan details",
+          "authentication": "Not Required",
+          "pathParameters": {
+            "id": "Pricing plan ID (MongoDB ObjectId)"
+          },
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Pricing plan retrieved successfully",
+              "plan": "PricingPlan object"
+            }
+          }
+        },
+        {
+          "name": "Get Pricing Comparison",
+          "method": "GET",
+          "path": "/api/pricing/comparison",
+          "description": "Get comparison data for all pricing plans",
+          "authentication": "Not Required",
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Pricing comparison retrieved successfully",
+              "comparison": {
+                "plans": "Array of plans",
+                "features": "Array of feature names",
+                "featureComparison": "Feature matrix"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "description": "Manage workspace subscriptions",
+      "endpoints": [
+        {
+          "name": "Get Current Workspace Subscription",
+          "method": "GET",
+          "path": "/api/subscription/workspace/:workspaceId",
+          "description": "Get active subscription for a workspace",
+          "authentication": "Required",
+          "pathParameters": {
+            "workspaceId": "Workspace ID (MongoDB ObjectId)"
+          },
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Subscription retrieved successfully",
+              "subscription": {
+                "_id": "string",
+                "user": "string (ObjectId)",
+                "workspace": "string (ObjectId)",
+                "plan": "PricingPlan object (populated)",
+                "status": "string (active, cancelled, expired, trial, past_due)",
+                "billingCycle": "string (monthly, yearly)",
+                "currentPeriodStart": "Date",
+                "currentPeriodEnd": "Date",
+                "cancelAtPeriodEnd": "boolean",
+                "stripeSubscriptionId": "string",
+                "stripeCustomerId": "string",
+                "isTrial": "boolean",
+                "trialStart": "Date",
+                "trialEnd": "Date",
+                "createdAt": "Date",
+                "updatedAt": "Date"
+              }
+            }
+          },
+          "errorResponses": [
+            {
+              "status": 404,
+              "description": "No active subscription found"
+            }
+          ],
+          "example": {
+            "request": "curl -H \"Authorization: Bearer TOKEN\" http://localhost:8000/api/subscription/workspace/507f1f77bcf86cd799439011",
+            "response": {
+              "message": "Subscription retrieved successfully",
+              "subscription": {
+                "status": "trial",
+                "plan": {
+                  "name": "Professional",
+                  "monthlyPrice": 12
+                },
+                "trialEnd": "2025-11-22T00:00:00.000Z"
+              }
+            }
+          }
+        },
+        {
+          "name": "Get All User Subscriptions",
+          "method": "GET",
+          "path": "/api/subscription/all",
+          "description": "Get all subscriptions for current user",
+          "authentication": "Required",
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Subscriptions retrieved successfully",
+              "subscriptions": "Array of Subscription objects"
+            }
+          }
+        },
+        {
+          "name": "Create Subscription",
+          "method": "POST",
+          "path": "/api/subscription/create",
+          "description": "Create new subscription for workspace",
+          "authentication": "Required",
+          "requestBody": {
+            "workspaceId": "string (required)",
+            "planId": "string (required)",
+            "billingCycle": "string (monthly or yearly, required)",
+            "isTrial": "boolean (optional, default: false)",
+            "paymentMethodId": "string (optional, Stripe payment method ID)"
+          },
+          "successResponse": {
+            "status": 201,
+            "body": {
+              "message": "Subscription created successfully",
+              "subscription": "Subscription object"
+            }
+          },
+          "example": {
+            "request": {
+              "method": "POST",
+              "url": "/api/subscription/create",
+              "headers": {
+                "Authorization": "Bearer TOKEN",
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "workspaceId": "507f1f77bcf86cd799439011",
+                "planId": "507f1f77bcf86cd799439012",
+                "billingCycle": "monthly",
+                "isTrial": true
+              }
+            },
+            "response": {
+              "message": "Subscription created successfully",
+              "subscription": {
+                "status": "trial",
+                "trialEnd": "2025-11-22T00:00:00.000Z"
+              }
+            }
+          }
+        },
+        {
+          "name": "Update Subscription",
+          "method": "PUT",
+          "path": "/api/subscription/:subscriptionId",
+          "description": "Update subscription (upgrade/downgrade plan)",
+          "authentication": "Required",
+          "pathParameters": {
+            "subscriptionId": "Subscription ID (MongoDB ObjectId)"
+          },
+          "requestBody": {
+            "planId": "string (optional)",
+            "billingCycle": "string (optional)",
+            "status": "string (optional)"
+          },
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Subscription updated successfully",
+              "subscription": "Updated Subscription object"
+            }
+          }
+        },
+        {
+          "name": "Cancel Subscription",
+          "method": "POST",
+          "path": "/api/subscription/:subscriptionId/cancel",
+          "description": "Cancel subscription at end of billing period",
+          "authentication": "Required",
+          "pathParameters": {
+            "subscriptionId": "Subscription ID (MongoDB ObjectId)"
+          },
+          "requestBody": {
+            "cancelImmediately": "boolean (optional, default: false)"
+          },
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Subscription cancelled successfully",
+              "subscription": "Updated Subscription object"
+            }
+          }
+        },
+        {
+          "name": "Reactivate Subscription",
+          "method": "POST",
+          "path": "/api/subscription/:subscriptionId/reactivate",
+          "description": "Reactivate cancelled subscription",
+          "authentication": "Required",
+          "pathParameters": {
+            "subscriptionId": "Subscription ID (MongoDB ObjectId)"
+          },
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Subscription reactivated successfully",
+              "subscription": "Updated Subscription object"
+            }
+          }
+        },
+        {
+          "name": "Get Workspace Limits",
+          "method": "GET",
+          "path": "/api/subscription/workspace/:workspaceId/limits",
+          "description": "Get subscription limits for workspace",
+          "authentication": "Required",
+          "pathParameters": {
+            "workspaceId": "Workspace ID (MongoDB ObjectId)"
+          },
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Workspace limits retrieved successfully",
+              "limits": {
+                "maxUsers": "number",
+                "maxProjects": "number",
+                "maxStorage": "number",
+                "features": "Features object"
+              },
+              "currentUsage": {
+                "users": "number",
+                "projects": "number",
+                "storage": "number (in GB)"
+              }
+            }
+          },
+          "example": {
+            "response": {
+              "limits": {
+                "maxUsers": 25,
+                "maxProjects": -1,
+                "maxStorage": 50
+              },
+              "currentUsage": {
+                "users": 8,
+                "projects": 12,
+                "storage": 5.2
+              }
+            }
+          }
+        },
+        {
+          "name": "Check Can Add Users",
+          "method": "POST",
+          "path": "/api/subscription/workspace/:workspaceId/check-users",
+          "description": "Check if workspace can add more users",
+          "authentication": "Required",
+          "pathParameters": {
+            "workspaceId": "Workspace ID (MongoDB ObjectId)"
+          },
+          "requestBody": {
+            "additionalUsers": "number (default: 1)"
+          },
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Can add users",
+              "canAdd": "boolean",
+              "currentCount": "number",
+              "maxAllowed": "number",
+              "remaining": "number"
+            }
+          }
+        },
+        {
+          "name": "Check Can Add Projects",
+          "method": "POST",
+          "path": "/api/subscription/workspace/:workspaceId/check-projects",
+          "description": "Check if workspace can add more projects",
+          "authentication": "Required",
+          "pathParameters": {
+            "workspaceId": "Workspace ID (MongoDB ObjectId)"
+          },
+          "requestBody": {
+            "additionalProjects": "number (default: 1)"
+          },
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Can add projects",
+              "canAdd": "boolean",
+              "currentCount": "number",
+              "maxAllowed": "number",
+              "remaining": "number or 'unlimited'"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "description": "Payment history and management",
+      "endpoints": [
+        {
+          "name": "Get Payment History",
+          "method": "GET",
+          "path": "/api/payment/history",
+          "description": "Get paginated payment history for current user",
+          "authentication": "Required",
+          "queryParameters": {
+            "page": "number (default: 1)",
+            "limit": "number (default: 10)"
+          },
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Payment history retrieved successfully",
+              "payments": [
+                {
+                  "_id": "string",
+                  "user": "string (ObjectId)",
+                  "workspace": "string (ObjectId)",
+                  "subscription": "string (ObjectId)",
+                  "amount": "number",
+                  "currency": "string (default: USD)",
+                  "status": "string (pending, succeeded, failed, refunded)",
+                  "paymentMethod": "string",
+                  "stripePaymentIntentId": "string",
+                  "stripeInvoiceId": "string",
+                  "invoiceUrl": "string",
+                  "description": "string",
+                  "paidAt": "Date",
+                  "createdAt": "Date"
+                }
+              ],
+              "pagination": {
+                "total": "number",
+                "page": "number",
+                "limit": "number",
+                "totalPages": "number"
+              }
+            }
+          },
+          "example": {
+            "request": "curl -H \"Authorization: Bearer TOKEN\" \"http://localhost:8000/api/payment/history?page=1&limit=10\"",
+            "response": {
+              "message": "Payment history retrieved successfully",
+              "payments": [
+                {
+                  "amount": 12,
+                  "currency": "USD",
+                  "status": "succeeded",
+                  "description": "Professional Plan - Monthly",
+                  "paidAt": "2025-10-21T00:00:00.000Z"
+                }
+              ],
+              "pagination": {
+                "total": 5,
+                "page": 1,
+                "limit": 10,
+                "totalPages": 1
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Payment Statistics",
+          "method": "GET",
+          "path": "/api/payment/stats",
+          "description": "Get payment statistics for current user",
+          "authentication": "Required",
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Payment statistics retrieved successfully",
+              "stats": {
+                "totalPaid": "number",
+                "totalPayments": "number",
+                "successfulPayments": "number",
+                "failedPayments": "number",
+                "currency": "string",
+                "lastPayment": "Payment object or null",
+                "nextPayment": {
+                  "date": "Date",
+                  "amount": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Payment by ID",
+          "method": "GET",
+          "path": "/api/payment/:paymentId",
+          "description": "Get single payment details",
+          "authentication": "Required",
+          "pathParameters": {
+            "paymentId": "Payment ID (MongoDB ObjectId)"
+          },
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "message": "Payment retrieved successfully",
+              "payment": "Payment object"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stripe Integration",
+      "description": "Stripe checkout and webhook endpoints",
+      "endpoints": [
+        {
+          "name": "Stripe Webhook",
+          "method": "POST",
+          "path": "/api/stripe/webhook",
+          "description": "Webhook endpoint for Stripe events",
+          "authentication": "Stripe Signature Required",
+          "headers": {
+            "stripe-signature": "Stripe webhook signature"
+          },
+          "handledEvents": [
+            "customer.subscription.created",
+            "customer.subscription.updated",
+            "customer.subscription.deleted",
+            "invoice.payment_succeeded",
+            "invoice.payment_failed",
+            "checkout.session.completed"
+          ],
+          "successResponse": {
+            "status": 200,
+            "body": {
+              "received": true
+            }
+          },
+          "note": "This endpoint is called by Stripe. Configure webhook in Stripe Dashboard."
+        }
+      ]
+    }
+  ],
+  "schemas": {
+    "SubscriptionPlan": {
+      "name": "string",
+      "description": "string",
+      "monthlyPrice": "number",
+      "yearlyPrice": "number",
+      "stripePriceIdMonthly": "string",
+      "stripePriceIdYearly": "string",
+      "maxUsers": "number",
+      "maxProjects": "number",
+      "maxStorage": "number",
+      "features": "Features object",
+      "isActive": "boolean",
+      "isPopular": "boolean",
+      "sortOrder": "number"
+    },
+    "Subscription": {
+      "user": "ObjectId",
+      "workspace": "ObjectId",
+      "plan": "ObjectId (populated to SubscriptionPlan)",
+      "status": "active | cancelled | expired | trial | past_due",
+      "billingCycle": "monthly | yearly",
+      "currentPeriodStart": "Date",
+      "currentPeriodEnd": "Date",
+      "cancelAtPeriodEnd": "boolean",
+      "stripeSubscriptionId": "string",
+      "stripeCustomerId": "string",
+      "isTrial": "boolean",
+      "trialStart": "Date",
+      "trialEnd": "Date"
+    },
+    "Payment": {
+      "user": "ObjectId",
+      "workspace": "ObjectId",
+      "subscription": "ObjectId",
+      "amount": "number",
+      "currency": "string",
+      "status": "pending | succeeded | failed | refunded",
+      "paymentMethod": "string",
+      "stripePaymentIntentId": "string",
+      "stripeInvoiceId": "string",
+      "invoiceUrl": "string",
+      "description": "string",
+      "paidAt": "Date"
+    }
+  },
+  "middleware": {
+    "requireActiveSubscription": {
+      "description": "Ensures workspace has an active subscription",
+      "usage": "Apply to routes that require active subscription"
+    },
+    "checkUserLimit": {
+      "description": "Checks if workspace can add more users",
+      "usage": "Apply before adding members to workspace"
+    },
+    "checkProjectLimit": {
+      "description": "Checks if workspace can add more projects",
+      "usage": "Apply before creating projects"
+    },
+    "requirePremiumFeatures": {
+      "description": "Checks if subscription allows premium features",
+      "usage": "Apply to advanced feature routes"
+    }
+  },
+  "setupGuide": {
+    "backend": {
+      "step1": "Add Stripe keys to .env file",
+      "step2": "Run pricing plans seeder: ts-node src/seeders/pricing-plans.seeder.ts",
+      "step3": "Configure Stripe webhook in Stripe Dashboard",
+      "step4": "Point webhook to: https://yourdomain.com/api/stripe/webhook",
+      "step5": "Add webhook secret to .env: STRIPE_WEBHOOK_SECRET"
+    },
+    "frontend": {
+      "step1": "Add VITE_STRIPE_PUBLISHABLE_KEY to .env",
+      "step2": "Install @stripe/stripe-js and @stripe/react-stripe-js",
+      "step3": "Use provided React Query hooks from api-service.ts",
+      "step4": "Integrate Pricing page with usePricingPlans()",
+      "step5": "Create subscription management components"
+    }
+  },
+  "testingGuide": {
+    "createTrialSubscription": {
+      "description": "Create a trial subscription for testing",
+      "endpoint": "POST /api/subscription/create",
+      "body": {
+        "workspaceId": "your_workspace_id",
+        "planId": "professional_plan_id",
+        "billingCycle": "monthly",
+        "isTrial": true
+      }
+    },
+    "checkLimits": {
+      "description": "Verify subscription limits are enforced",
+      "endpoint": "GET /api/subscription/workspace/:id/limits"
+    },
+    "stripeTestCards": {
+      "success": "4242 4242 4242 4242",
+      "decline": "4000 0000 0000 0002",
+      "insufficientFunds": "4000 0000 0000 9995"
+    }
+  }
+}
